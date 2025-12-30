@@ -1,6 +1,6 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Save, Eye } from 'lucide-react';
+import { ArrowLeft, Save, Eye, Upload, X, Link } from 'lucide-react';
 import { marked } from 'marked';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -40,6 +40,140 @@ const generateSlug = (title: string): string => {
     .replace(/-+/g, '-')
     .trim();
 };
+
+interface CoverImageUploadProps {
+  coverImage: string;
+  onImageChange: (url: string) => void;
+}
+
+function CoverImageUpload({ coverImage, onImageChange }: CoverImageUploadProps) {
+  const [useUrl, setUseUrl] = useState(false);
+  const [urlInput, setUrlInput] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      return;
+    }
+
+    // Create object URL for preview (in production, this would upload to storage)
+    const objectUrl = URL.createObjectURL(file);
+    onImageChange(objectUrl);
+  };
+
+  const handleUrlSubmit = () => {
+    if (urlInput.trim()) {
+      onImageChange(urlInput.trim());
+      setUrlInput('');
+      setUseUrl(false);
+    }
+  };
+
+  const handleRemove = () => {
+    onImageChange('');
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Cover Image</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {coverImage ? (
+          <div className="relative">
+            <div className="aspect-video rounded-lg overflow-hidden bg-muted">
+              <img
+                src={coverImage}
+                alt="Cover preview"
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = '/placeholder.svg';
+                }}
+              />
+            </div>
+            <Button
+              type="button"
+              variant="destructive"
+              size="icon"
+              className="absolute top-2 right-2"
+              onClick={handleRemove}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        ) : (
+          <>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleFileSelect}
+              className="hidden"
+            />
+            
+            {useUrl ? (
+              <div className="space-y-2">
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="https://example.com/image.jpg"
+                    value={urlInput}
+                    onChange={(e) => setUrlInput(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleUrlSubmit()}
+                  />
+                  <Button type="button" onClick={handleUrlSubmit}>
+                    Add
+                  </Button>
+                </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setUseUrl(false)}
+                >
+                  <Upload className="mr-2 h-4 w-4" />
+                  Upload instead
+                </Button>
+              </div>
+            ) : (
+              <div
+                className="border-2 border-dashed rounded-lg p-6 text-center cursor-pointer hover:border-primary/50 transition-colors"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <Upload className="mx-auto h-8 w-8 text-muted-foreground mb-2" />
+                <p className="text-sm text-muted-foreground">
+                  Click to upload an image
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  PNG, JPG, GIF up to 10MB
+                </p>
+              </div>
+            )}
+            
+            {!useUrl && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="w-full"
+                onClick={() => setUseUrl(true)}
+              >
+                <Link className="mr-2 h-4 w-4" />
+                Use URL instead
+              </Button>
+            )}
+          </>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
 
 export default function PostEditor() {
   const { id } = useParams<{ id: string }>();
@@ -305,34 +439,10 @@ export default function PostEditor() {
                 </CardContent>
               </Card>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle>Cover Image</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="coverImage">Image URL</Label>
-                    <Input
-                      id="coverImage"
-                      placeholder="https://example.com/image.jpg"
-                      value={formData.coverImage}
-                      onChange={(e) => handleChange('coverImage', e.target.value)}
-                    />
-                  </div>
-                  {formData.coverImage && (
-                    <div className="aspect-video rounded-lg overflow-hidden bg-muted">
-                      <img
-                        src={formData.coverImage}
-                        alt="Cover preview"
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).style.display = 'none';
-                        }}
-                      />
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+              <CoverImageUpload
+                coverImage={formData.coverImage}
+                onImageChange={(url) => handleChange('coverImage', url)}
+              />
             </div>
           </div>
         </div>
