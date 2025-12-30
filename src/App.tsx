@@ -18,6 +18,10 @@ import NotFound from "./pages/NotFound";
 // Admin Pages
 import AdminLogin from "./pages/admin/AdminLogin";
 import AdminDashboard from "./pages/admin/AdminDashboard";
+import PostsManager from "./pages/admin/PostsManager";
+import PostEditor from "./pages/admin/PostEditor";
+import FeesManager from "./pages/admin/FeesManager";
+import Settings from "./pages/admin/Settings";
 
 const queryClient = new QueryClient();
 
@@ -41,6 +45,11 @@ const App = () => (
           {/* Admin Routes */}
           <Route path="/admin/login" element={<AdminLogin />} />
           <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/admin/posts" element={<PostsManager />} />
+          <Route path="/admin/posts/new" element={<PostEditor />} />
+          <Route path="/admin/posts/:id/edit" element={<PostEditor />} />
+          <Route path="/admin/fees" element={<FeesManager />} />
+          <Route path="/admin/settings" element={<Settings />} />
           
           {/* Catch-all 404 */}
           <Route path="*" element={<NotFound />} />
