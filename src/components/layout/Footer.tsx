@@ -1,6 +1,9 @@
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Mail, Phone, MapPin, Linkedin, Twitter } from 'lucide-react';
 import { mockSettings } from '@/lib/mockData';
+import { settingsApi } from '@/lib/api';
+import { Settings } from '@/types';
 
 const quickLinks = [
   { to: '/services', label: 'Services' },
@@ -20,7 +23,19 @@ const practiceAreas = [
 ];
 
 export function Footer() {
-  const settings = mockSettings;
+  const [settings, setSettings] = useState<Settings>(mockSettings);
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const data = await settingsApi.get();
+        setSettings(data);
+      } catch (error) {
+        console.error('Failed to fetch settings:', error);
+      }
+    };
+    fetchSettings();
+  }, []);
   const currentYear = new Date().getFullYear();
 
   return (
