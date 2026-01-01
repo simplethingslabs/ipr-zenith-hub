@@ -1,0 +1,101 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Enums
+enum PostCategory {
+  Judgment
+  Commentary
+}
+
+enum PostStatus {
+  draft
+  published
+}
+
+enum Audience {
+  Individuals
+  Businesses
+}
+
+enum FeeType {
+  fixed
+  variable
+}
+
+enum UserRole {
+  admin
+}
+
+// Models
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String   // bcrypt hashed
+  name      String
+  role      UserRole @default(admin)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Post {
+  id          String       @id @default(uuid())
+  title       String
+  slug        String       @unique
+  content     String       @db.Text
+  excerpt     String
+  coverImage  String?
+  category    PostCategory
+  tags        String[]     // PostgreSQL array
+  status      PostStatus   @default(draft)
+  publishedAt DateTime?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+model FeeItem {
+  id        String   @id @default(uuid())
+  name      String
+  audience  Audience
+  type      FeeType
+  priceMin  Int
+  priceMax  Int?
+  category  String
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Settings {
+  id           String   @id @default("main") // Singleton pattern
+  firmName     String
+  tagline      String
+  bio          String   @db.Text
+  email        String
+  phone        String
+  whatsapp     String?
+  addressLine  String
+  addressCity  String
+  addressState String
+  postalCode   String
+  linkedin     String?
+  twitter      String?
+  facebook     String?
+  heroImage    String?
+  updatedAt    DateTime @updatedAt
+}
+
+model ContactSubmission {
+  id        String   @id @default(uuid())
+  name      String
+  email     String
+  phone     String?
+  subject   String
+  message   String   @db.Text
+  createdAt DateTime @default(now())
+}
