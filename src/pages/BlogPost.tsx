@@ -1,16 +1,48 @@
+import { useState, useEffect } from 'react';
 import { useParams, Link, Navigate } from 'react-router-dom';
 import { ArrowLeft, Calendar, Tag } from 'lucide-react';
 import { marked } from 'marked';
 import { Button } from '@/components/ui/button';
 import { PublicLayout } from '@/components/layout/PublicLayout';
 import { Container } from '@/components/layout/Container';
-import { mockPosts } from '@/lib/mockData';
+import { postsApi } from '@/lib/api';
+import { Post } from '@/types';
 
 export default function BlogPost() {
   const { slug } = useParams<{ slug: string }>();
-  const post = mockPosts.find((p) => p.slug === slug && p.status === 'published');
+  const [post, setPost] = useState<Post | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
-  if (!post) {
+  useEffect(() => {
+    const fetchPost = async () => {
+      if (!slug) return;
+      try {
+        const data = await postsApi.getBySlug(slug);
+        if (data.status !== 'published') {
+          throw new Error('Post not published');
+        }
+        setPost(data);
+      } catch (err) {
+        setError(true);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchPost();
+  }, [slug]);
+
+  if (loading) {
+    return (
+      <PublicLayout>
+        <Container>
+          <div className="py-20 text-center">Loading...</div>
+        </Container>
+      </PublicLayout>
+    );
+  }
+
+  if (error || !post) {
     return <Navigate to="/blog" replace />;
   }
 

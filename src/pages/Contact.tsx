@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Mail, Phone, MapPin, Send } from 'lucide-react';
 import { useForm } from 'react-hook-form';
@@ -12,6 +12,8 @@ import { useToast } from '@/hooks/use-toast';
 import { PublicLayout } from '@/components/layout/PublicLayout';
 import { Container } from '@/components/layout/Container';
 import { mockSettings } from '@/lib/mockData';
+import { settingsApi, contactApi } from '@/lib/api';
+import { Settings, ContactFormData } from '@/types';
 
 const contactSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters').max(100),
@@ -21,12 +23,25 @@ const contactSchema = z.object({
   message: z.string().min(20, 'Message must be at least 20 characters').max(2000),
 });
 
-type ContactFormData = z.infer<typeof contactSchema>;
+// Remove local type inference to avoid conflict/mismatch
+// type ContactFormData = z.infer<typeof contactSchema>;
 
 export default function Contact() {
-  const settings = mockSettings;
+  const [settings, setSettings] = useState<Settings>(mockSettings);
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const data = await settingsApi.get();
+        setSettings(data);
+      } catch (error) {
+        console.error('Failed to fetch settings:', error);
+      }
+    };
+    fetchSettings();
+  }, []);
 
   const {
     register,
@@ -40,10 +55,8 @@ export default function Contact() {
   const onSubmit = async (data: ContactFormData) => {
     setIsSubmitting(true);
     try {
-      // Simulate API call - will be replaced with real API
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      console.log('Contact form submission:', data);
-      
+      await contactApi.submit(data);
+
       toast({
         title: 'Message Sent!',
         description: 'Thank you for reaching out. We\'ll get back to you soon.',

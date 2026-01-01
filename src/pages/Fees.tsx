@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -6,8 +6,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PublicLayout } from '@/components/layout/PublicLayout';
 import { Container } from '@/components/layout/Container';
-import { mockFees } from '@/lib/mockData';
-import { Audience } from '@/types';
+import { feesApi } from '@/lib/api';
+import { Audience, FeeItem } from '@/types';
 
 function formatPrice(min: number, max?: number): string {
   const formatter = new Intl.NumberFormat('en-IN', {
@@ -24,9 +24,25 @@ function formatPrice(min: number, max?: number): string {
 
 export default function Fees() {
   const [audience, setAudience] = useState<Audience>('Individuals');
+  const [fees, setFees] = useState<FeeItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const filteredFees = mockFees.filter((fee) => fee.audience === audience);
-  const categories = [...new Set(filteredFees.map((fee) => fee.category))];
+  useEffect(() => {
+    const fetchFees = async () => {
+      setIsLoading(true);
+      try {
+        const data = await feesApi.getAll({ audience });
+        setFees(data);
+      } catch (error) {
+        console.error('Failed to fetch fees:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchFees();
+  }, [audience]);
+
+  const categories = [...new Set(fees.map((fee) => fee.category))];
 
   return (
     <PublicLayout>
@@ -57,7 +73,7 @@ export default function Fees() {
                   <div key={category}>
                     <h2 className="text-2xl font-bold mb-6">{category}</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {filteredFees
+                      {fees
                         .filter((fee) => fee.category === category)
                         .map((fee) => (
                           <Card key={fee.id} className="border-border">

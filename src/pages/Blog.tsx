@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -6,16 +6,27 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { PublicLayout } from '@/components/layout/PublicLayout';
 import { Container } from '@/components/layout/Container';
-import { mockPosts } from '@/lib/mockData';
-import { PostCategory } from '@/types';
+import { postsApi } from '@/lib/api';
+import { PostCategory, Post } from '@/types';
 
 const categories: (PostCategory | 'All')[] = ['All', 'Judgment', 'Commentary'];
 
 export default function Blog() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<PostCategory | 'All'>('All');
+  const [publishedPosts, setPublishedPosts] = useState<Post[]>([]);
 
-  const publishedPosts = mockPosts.filter((p) => p.status === 'published');
+  useEffect(() => {
+    const fetchPosts = async () => {
+      try {
+        const data = await postsApi.getAll({ status: 'published' });
+        setPublishedPosts(data);
+      } catch (error) {
+        console.error('Failed to fetch posts:', error);
+      }
+    };
+    fetchPosts();
+  }, []);
 
   const filteredPosts = useMemo(() => {
     return publishedPosts.filter((post) => {

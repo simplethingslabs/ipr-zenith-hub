@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Award, Users, Target, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -5,6 +6,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { PublicLayout } from '@/components/layout/PublicLayout';
 import { Container } from '@/components/layout/Container';
 import { mockSettings } from '@/lib/mockData';
+import { settingsApi } from '@/lib/api';
+import { Settings } from '@/types';
 
 const values = [
   {
@@ -40,7 +43,19 @@ const milestones = [
 ];
 
 export default function About() {
-  const settings = mockSettings;
+  const [settings, setSettings] = useState<Settings>(mockSettings);
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const data = await settingsApi.get();
+        setSettings(data);
+      } catch (error) {
+        console.error('Failed to fetch settings:', error);
+      }
+    };
+    fetchSettings();
+  }, []);
 
   return (
     <PublicLayout>

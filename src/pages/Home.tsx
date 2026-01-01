@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Shield, FileText, Scale, Award } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -5,6 +6,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { PublicLayout } from '@/components/layout/PublicLayout';
 import { Container } from '@/components/layout/Container';
 import { mockPosts, mockSettings } from '@/lib/mockData';
+import { settingsApi, postsApi } from '@/lib/api';
+import { Post, Settings } from '@/types';
 
 const valueProps = [
   {
@@ -30,8 +33,25 @@ const valueProps = [
 ];
 
 export default function Home() {
-  const settings = mockSettings;
-  const featuredPosts = mockPosts.filter((p) => p.status === 'published').slice(0, 3);
+  const [settings, setSettings] = useState<Settings>(mockSettings);
+  const [featuredPosts, setFeaturedPosts] = useState<Post[]>(mockPosts.filter((p) => p.status === 'published').slice(0, 3));
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [settingsData, postsData] = await Promise.all([
+          settingsApi.get(),
+          postsApi.getAll({ status: 'published' })
+        ]);
+
+        setSettings(settingsData);
+        setFeaturedPosts(postsData.slice(0, 3));
+      } catch (error) {
+        console.error('Failed to fetch home data:', error);
+      }
+    };
+    fetchData();
+  }, []);
 
   return (
     <PublicLayout>
