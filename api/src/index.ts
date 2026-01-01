@@ -16,6 +16,16 @@ app.use(cors({ origin: CORS_ORIGIN, credentials: true }));
 app.use(morgan('dev'));
 app.use(express.json());
 
+// Root route
+app.get('/', (req, res) => {
+  res.json({
+    message: 'Welcome to IPR Central API',
+    version: '1.0.0',
+    documentation: '/api/docs', // Future placeholder
+    health: '/health'
+  });
+});
+
 // Health check
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
