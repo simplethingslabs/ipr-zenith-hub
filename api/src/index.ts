@@ -12,7 +12,26 @@ const CORS_ORIGIN = process.env.CORS_ORIGIN || 'http://localhost:5173';
 
 // Middleware
 app.use(helmet());
-app.use(cors({ origin: CORS_ORIGIN, credentials: true }));
+
+// Dynamic CORS origin handler
+app.use(cors({
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+
+    // Split permitted origins by comma
+    const allowedOrigins = CORS_ORIGIN.split(',').map(o => o.trim());
+
+    // Check if origin is allowed or if wildcard is used
+    if (allowedOrigins.includes(origin) || allowedOrigins.includes('*')) {
+      callback(null, true);
+    } else {
+      console.log('Blocked by CORS:', origin);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true
+}));
 app.use(morgan('dev'));
 app.use(express.json());
 
