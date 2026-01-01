@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,6 +9,7 @@ import { Separator } from '@/components/ui/separator';
 import { AdminLayout } from '@/components/layout/AdminLayout';
 import { Container } from '@/components/layout/Container';
 import { mockSettings } from '@/lib/mockData';
+import { settingsApi } from '@/lib/api';
 import { Settings as SettingsType } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 
@@ -35,20 +36,39 @@ export default function Settings() {
     }));
   };
 
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const data = await settingsApi.get();
+        setSettings(data);
+      } catch (error) {
+        toast({
+          title: 'Error',
+          description: 'Failed to load settings',
+          variant: 'destructive',
+        });
+      }
+    };
+    fetchSettings();
+  }, [toast]);
+
   const handleSave = async () => {
     setIsSaving(true);
-
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 500));
-
-    console.log('Saving settings:', settings);
-
-    toast({
-      title: 'Settings saved',
-      description: 'Your settings have been successfully updated.',
-    });
-
-    setIsSaving(false);
+    try {
+      await settingsApi.update(settings);
+      toast({
+        title: 'Settings saved',
+        description: 'Your settings have been successfully updated.',
+      });
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to save settings',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
