@@ -1,6 +1,6 @@
 import { Post, FeeItem, Settings, ContactFormData, User, PostCategory, PostStatus, Audience } from '@/types';
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api';
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'https://ipr-zenith-hub.onrender.com/api';
 
 // Auth token helper
 const getAuthHeader = (): Record<string, string> => {
