@@ -49,9 +49,10 @@ export default function AdminLogin() {
         navigate('/admin');
       }
     } catch (error) {
+      console.error('Login error:', error);
       toast({
         title: 'Login Failed',
-        description: 'Invalid email or password. Please try again.',
+        description: error instanceof Error ? error.message : 'Invalid email or password',
         variant: 'destructive',
       });
     } finally {
