@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { useAuthStore } from '@/stores/authStore';
-import { mockUser } from '@/lib/mockData';
+import { authApi } from '@/lib/api';
 
 const loginSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
@@ -37,13 +37,11 @@ export default function AdminLogin() {
   const onSubmit = async (data: LoginFormData) => {
     setIsSubmitting(true);
     try {
-      // Simulate API call - will be replaced with real API
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      // Real authentication
+      const response = await authApi.login(data.email, data.password);
 
-      // Mock authentication - accepts any valid email/password
-      if (data.email && data.password) {
-        const mockToken = 'mock-jwt-token-' + Date.now();
-        login(mockToken, mockUser);
+      if (response.token && response.user) {
+        login(response.token, response.user);
         toast({
           title: 'Welcome back!',
           description: 'You have successfully logged in.',

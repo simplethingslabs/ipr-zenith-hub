@@ -34,6 +34,13 @@ async function request<T>(
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({ message: 'Request failed' }));
+
+    // Check for validation errors and format them
+    if (error.errors && Array.isArray(error.errors)) {
+      const questions = error.errors.map((e: any) => `${e.field}: ${e.message}`).join(', ');
+      throw new Error(`Validation error: ${questions}`);
+    }
+
     throw new Error(error.message || `HTTP ${response.status}`);
   }
 
@@ -75,7 +82,7 @@ export interface CreatePostData {
   status: PostStatus;
 }
 
-export interface UpdatePostData extends Partial<CreatePostData> {}
+export interface UpdatePostData extends Partial<CreatePostData> { }
 
 export const postsApi = {
   getAll: (query?: PostsQuery): Promise<Post[]> => {
@@ -123,7 +130,7 @@ export interface CreateFeeData {
   notes?: string;
 }
 
-export interface UpdateFeeData extends Partial<CreateFeeData> {}
+export interface UpdateFeeData extends Partial<CreateFeeData> { }
 
 export const feesApi = {
   getAll: (query?: FeesQuery): Promise<FeeItem[]> => {

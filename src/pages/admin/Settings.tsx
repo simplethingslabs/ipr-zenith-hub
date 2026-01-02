@@ -61,9 +61,9 @@ export default function Settings() {
         description: 'Your settings have been successfully updated.',
       });
     } catch (error) {
+      console.error('Save error:', error);
       toast({
-        title: 'Error',
-        description: 'Failed to save settings',
+        title: `Failed to save settings: ${error instanceof Error ? error.message : 'Unknown error'}`,
         variant: 'destructive',
       });
     } finally {
