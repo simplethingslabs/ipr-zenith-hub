@@ -1,6 +1,6 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Plus, Search, Edit, Trash2, Eye } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, Eye, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -33,16 +33,35 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { AdminLayout } from '@/components/layout/AdminLayout';
 import { Container } from '@/components/layout/Container';
-import { mockPosts } from '@/lib/mockData';
+import { postsApi } from '@/lib/api';
 import { Post, PostStatus, PostCategory } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 
 export default function PostsManager() {
   const { toast } = useToast();
-  const [posts, setPosts] = useState<Post[]>(mockPosts);
+  const [posts, setPosts] = useState<Post[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<PostStatus | 'all'>('all');
   const [categoryFilter, setCategoryFilter] = useState<PostCategory | 'all'>('all');
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchPosts = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const data = await postsApi.getAll();
+        setPosts(data);
+      } catch (err) {
+        console.error('Failed to fetch posts:', err);
+        setError('Failed to load posts. Please try again.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchPosts();
+  }, []);
 
   const filteredPosts = useMemo(() => {
     return posts.filter((post) => {
@@ -55,12 +74,22 @@ export default function PostsManager() {
     });
   }, [posts, searchQuery, statusFilter, categoryFilter]);
 
-  const handleDelete = (id: string) => {
-    setPosts(posts.filter((post) => post.id !== id));
-    toast({
-      title: 'Post deleted',
-      description: 'The post has been successfully deleted.',
-    });
+  const handleDelete = async (id: string) => {
+    try {
+      await postsApi.delete(id);
+      setPosts(posts.filter((post) => post.id !== id));
+      toast({
+        title: 'Post deleted',
+        description: 'The post has been successfully deleted.',
+      });
+    } catch (err) {
+      console.error('Failed to delete post:', err);
+      toast({
+        title: 'Error',
+        description: 'Failed to delete post. Please try again.',
+        variant: 'destructive',
+      });
+    }
   };
 
   return (
@@ -126,9 +155,23 @@ export default function PostsManager() {
               <CardTitle>All Posts ({filteredPosts.length})</CardTitle>
             </CardHeader>
             <CardContent>
-              {filteredPosts.length === 0 ? (
+              {isLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                </div>
+              ) : error ? (
+                <div className="flex flex-col items-center justify-center py-12 gap-4">
+                  <p className="text-destructive">{error}</p>
+                  <Button onClick={() => window.location.reload()}>Retry</Button>
+                </div>
+              ) : filteredPosts.length === 0 ? (
                 <div className="text-center py-12 text-muted-foreground">
                   <p>No posts found matching your criteria.</p>
+                  {posts.length === 0 && (
+                    <Button asChild className="mt-4">
+                      <Link to="/admin/posts/new">Create your first post</Link>
+                    </Button>
+                  )}
                 </div>
               ) : (
                 <div className="overflow-x-auto">

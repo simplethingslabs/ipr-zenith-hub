@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Save, Eye, Upload, X, Link } from 'lucide-react';
+import { ArrowLeft, Save, Eye, Upload, X, Link, Loader2 } from 'lucide-react';
 import { marked } from 'marked';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,7 +17,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AdminLayout } from '@/components/layout/AdminLayout';
 import { Container } from '@/components/layout/Container';
-import { mockPosts } from '@/lib/mockData';
+import { postsApi } from '@/lib/api';
 import { Post, PostStatus, PostCategory } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 
@@ -193,25 +193,53 @@ export default function PostEditor() {
   });
 
   const [autoSlug, setAutoSlug] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     if (id) {
-      const post = mockPosts.find((p) => p.id === id);
-      if (post) {
-        setFormData({
-          title: post.title,
-          slug: post.slug,
-          coverImage: post.coverImage || '',
-          content: post.content,
-          excerpt: post.excerpt,
-          category: post.category,
-          tags: post.tags.join(', '),
-          status: post.status,
-        });
-        setAutoSlug(false);
-      }
+      const fetchPost = async () => {
+        setIsLoading(true);
+        try {
+          // First try to get all posts and find by ID
+          const posts = await postsApi.getAll();
+          const post = posts.find((p) => p.id === id);
+          
+          if (post) {
+            setFormData({
+              title: post.title,
+              slug: post.slug,
+              coverImage: post.coverImage || '',
+              content: post.content,
+              excerpt: post.excerpt,
+              category: post.category,
+              tags: post.tags.join(', '),
+              status: post.status,
+            });
+            setAutoSlug(false);
+          } else {
+            toast({
+              title: 'Error',
+              description: 'Post not found',
+              variant: 'destructive',
+            });
+            navigate('/admin/posts');
+          }
+        } catch (err) {
+          console.error('Failed to fetch post:', err);
+          toast({
+            title: 'Error',
+            description: 'Failed to load post',
+            variant: 'destructive',
+          });
+          navigate('/admin/posts');
+        } finally {
+          setIsLoading(false);
+        }
+      };
+      fetchPost();
     }
-  }, [id]);
+  }, [id, navigate, toast]);
 
   useEffect(() => {
     if (autoSlug && formData.title) {
@@ -231,7 +259,7 @@ export default function PostEditor() {
     }
   };
 
-  const handleSave = (status: PostStatus) => {
+  const handleSave = async (status: PostStatus) => {
     if (!formData.title.trim()) {
       toast({
         title: 'Error',
@@ -250,31 +278,56 @@ export default function PostEditor() {
       return;
     }
 
-    // In a real app, this would make an API call
-    const post: Post = {
-      id: id || Date.now().toString(),
-      title: formData.title,
-      slug: formData.slug || generateSlug(formData.title),
-      coverImage: formData.coverImage || undefined,
-      content: formData.content,
-      excerpt: formData.excerpt || formData.content.substring(0, 150) + '...',
-      category: formData.category,
-      tags: formData.tags.split(',').map((t) => t.trim()).filter(Boolean),
-      status,
-      publishedAt: status === 'published' ? new Date().toISOString() : undefined,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
+    setIsSaving(true);
+    try {
+      const postData = {
+        title: formData.title,
+        content: formData.content,
+        excerpt: formData.excerpt || formData.content.substring(0, 150) + '...',
+        coverImage: formData.coverImage || undefined,
+        category: formData.category,
+        tags: formData.tags.split(',').map((t) => t.trim()).filter(Boolean),
+        status,
+      };
 
-    console.log('Saving post:', post);
+      if (isEditing && id) {
+        await postsApi.update(id, postData);
+        toast({
+          title: 'Post updated',
+          description: `The post has been ${status === 'published' ? 'published' : 'saved as draft'}.`,
+        });
+      } else {
+        await postsApi.create(postData);
+        toast({
+          title: 'Post created',
+          description: `The post has been ${status === 'published' ? 'published' : 'saved as draft'}.`,
+        });
+      }
 
-    toast({
-      title: isEditing ? 'Post updated' : 'Post created',
-      description: `The post has been ${status === 'published' ? 'published' : 'saved as draft'}.`,
-    });
-
-    navigate('/admin/posts');
+      navigate('/admin/posts');
+    } catch (err) {
+      console.error('Failed to save post:', err);
+      toast({
+        title: 'Error',
+        description: 'Failed to save post. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
+
+  if (isLoading) {
+    return (
+      <AdminLayout>
+        <Container>
+          <div className="flex items-center justify-center min-h-[60vh]">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        </Container>
+      </AdminLayout>
+    );
+  }
 
   return (
     <AdminLayout>
@@ -294,11 +347,20 @@ export default function PostEditor() {
               </div>
             </div>
             <div className="flex gap-2">
-              <Button variant="outline" onClick={() => handleSave('draft')}>
-                <Save className="mr-2 h-4 w-4" />
+              <Button variant="outline" onClick={() => handleSave('draft')} disabled={isSaving}>
+                {isSaving ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Save className="mr-2 h-4 w-4" />
+                )}
                 Save Draft
               </Button>
-              <Button className="bg-accent text-accent-foreground hover:bg-accent/90" onClick={() => handleSave('published')}>
+              <Button 
+                className="bg-accent text-accent-foreground hover:bg-accent/90" 
+                onClick={() => handleSave('published')}
+                disabled={isSaving}
+              >
+                {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Publish
               </Button>
             </div>

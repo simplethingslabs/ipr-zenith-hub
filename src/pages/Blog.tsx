@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Search } from 'lucide-react';
+import { Search, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -15,14 +15,21 @@ export default function Blog() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<PostCategory | 'All'>('All');
   const [publishedPosts, setPublishedPosts] = useState<Post[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchPosts = async () => {
+      setIsLoading(true);
+      setError(null);
       try {
         const data = await postsApi.getAll({ status: 'published' });
         setPublishedPosts(data);
-      } catch (error) {
-        console.error('Failed to fetch posts:', error);
+      } catch (err) {
+        console.error('Failed to fetch posts:', err);
+        setError('Failed to load posts. Please try again later.');
+      } finally {
+        setIsLoading(false);
       }
     };
     fetchPosts();
@@ -89,7 +96,16 @@ export default function Blog() {
       {/* Posts Grid */}
       <section className="py-16 md:py-24">
         <Container>
-          {filteredPosts.length === 0 ? (
+          {isLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          ) : error ? (
+            <div className="flex flex-col items-center justify-center py-12 gap-4">
+              <p className="text-destructive">{error}</p>
+              <Button onClick={() => window.location.reload()}>Retry</Button>
+            </div>
+          ) : filteredPosts.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-muted-foreground">No articles found matching your criteria.</p>
               <Button
@@ -122,13 +138,15 @@ export default function Blog() {
                       <span className="text-xs font-medium px-2 py-1 rounded-full bg-accent/10 text-accent">
                         {post.category}
                       </span>
-                      <span className="text-xs text-muted-foreground">
-                        {new Date(post.publishedAt!).toLocaleDateString('en-IN', {
-                          month: 'short',
-                          day: 'numeric',
-                          year: 'numeric',
-                        })}
-                      </span>
+                      {post.publishedAt && (
+                        <span className="text-xs text-muted-foreground">
+                          {new Date(post.publishedAt).toLocaleDateString('en-IN', {
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric',
+                          })}
+                        </span>
+                      )}
                     </div>
                     <h2 className="font-serif font-semibold text-xl mb-2 line-clamp-2">
                       <Link to={`/blog/${post.slug}`} className="hover:text-accent transition-colors">
