@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { Mail, Phone, MapPin, Send } from 'lucide-react';
+import { Mail, Phone, MapPin, Send, Loader2 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -11,7 +10,6 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { PublicLayout } from '@/components/layout/PublicLayout';
 import { Container } from '@/components/layout/Container';
-import { mockSettings } from '@/lib/mockData';
 import { settingsApi, contactApi } from '@/lib/api';
 import { Settings, ContactFormData } from '@/types';
 
@@ -23,11 +21,9 @@ const contactSchema = z.object({
   message: z.string().min(20, 'Message must be at least 20 characters').max(2000),
 });
 
-// Remove local type inference to avoid conflict/mismatch
-// type ContactFormData = z.infer<typeof contactSchema>;
-
 export default function Contact() {
-  const [settings, setSettings] = useState<Settings>(mockSettings);
+  const [settings, setSettings] = useState<Settings | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -38,6 +34,8 @@ export default function Contact() {
         setSettings(data);
       } catch (error) {
         console.error('Failed to fetch settings:', error);
+      } finally {
+        setIsLoading(false);
       }
     };
     fetchSettings();
@@ -179,49 +177,56 @@ export default function Contact() {
             {/* Contact Info */}
             <div>
               <h2 className="text-2xl font-bold mb-6">Get in Touch</h2>
-              <div className="space-y-6">
-                <div className="flex items-start space-x-4">
-                  <div className="h-10 w-10 rounded-lg bg-accent/10 flex items-center justify-center flex-shrink-0">
-                    <MapPin className="h-5 w-5 text-accent" />
+              {isLoading ? (
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Loading contact info...
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  <div className="flex items-start space-x-4">
+                    <div className="h-10 w-10 rounded-lg bg-accent/10 flex items-center justify-center flex-shrink-0">
+                      <MapPin className="h-5 w-5 text-accent" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold mb-1">Address</h3>
+                      <p className="text-muted-foreground text-sm">
+                        {settings?.address?.line || 'Address not available'}<br />
+                        {settings?.address?.city}, {settings?.address?.state}<br />
+                        {settings?.address?.postalCode}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="font-semibold mb-1">Address</h3>
-                    <p className="text-muted-foreground text-sm">
-                      {settings.address.line}<br />
-                      {settings.address.city}, {settings.address.state}<br />
-                      {settings.address.postalCode}
-                    </p>
+                  <div className="flex items-start space-x-4">
+                    <div className="h-10 w-10 rounded-lg bg-accent/10 flex items-center justify-center flex-shrink-0">
+                      <Phone className="h-5 w-5 text-accent" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold mb-1">Phone</h3>
+                      <a
+                        href={`tel:${settings?.phone || ''}`}
+                        className="text-muted-foreground text-sm hover:text-accent transition-colors"
+                      >
+                        {settings?.phone || 'Phone not available'}
+                      </a>
+                    </div>
+                  </div>
+                  <div className="flex items-start space-x-4">
+                    <div className="h-10 w-10 rounded-lg bg-accent/10 flex items-center justify-center flex-shrink-0">
+                      <Mail className="h-5 w-5 text-accent" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold mb-1">Email</h3>
+                      <a
+                        href={`mailto:${settings?.email || ''}`}
+                        className="text-muted-foreground text-sm hover:text-accent transition-colors"
+                      >
+                        {settings?.email || 'Email not available'}
+                      </a>
+                    </div>
                   </div>
                 </div>
-                <div className="flex items-start space-x-4">
-                  <div className="h-10 w-10 rounded-lg bg-accent/10 flex items-center justify-center flex-shrink-0">
-                    <Phone className="h-5 w-5 text-accent" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold mb-1">Phone</h3>
-                    <a
-                      href={`tel:${settings.phone}`}
-                      className="text-muted-foreground text-sm hover:text-accent transition-colors"
-                    >
-                      {settings.phone}
-                    </a>
-                  </div>
-                </div>
-                <div className="flex items-start space-x-4">
-                  <div className="h-10 w-10 rounded-lg bg-accent/10 flex items-center justify-center flex-shrink-0">
-                    <Mail className="h-5 w-5 text-accent" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold mb-1">Email</h3>
-                    <a
-                      href={`mailto:${settings.email}`}
-                      className="text-muted-foreground text-sm hover:text-accent transition-colors"
-                    >
-                      {settings.email}
-                    </a>
-                  </div>
-                </div>
-              </div>
+              )}
 
               <div className="mt-8 p-6 bg-muted/50 rounded-lg">
                 <h3 className="font-semibold mb-2">Office Hours</h3>
