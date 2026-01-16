@@ -1,21 +1,48 @@
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { FileText, DollarSign, Settings, Plus, LogOut } from 'lucide-react';
+import { FileText, DollarSign, Settings, Plus, LogOut, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { AdminLayout } from '@/components/layout/AdminLayout';
 import { Container } from '@/components/layout/Container';
 import { useAuthStore } from '@/stores/authStore';
-import { mockPosts, mockFees } from '@/lib/mockData';
+import { postsApi, feesApi } from '@/lib/api';
+import { Post } from '@/types';
 
 export default function AdminDashboard() {
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
+  
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [stats, setStats] = useState({ total: 0, published: 0, drafts: 0, fees: 0 });
+  const [isLoading, setIsLoading] = useState(true);
 
-  const publishedPosts = mockPosts.filter((p) => p.status === 'published').length;
-  const draftPosts = mockPosts.filter((p) => p.status === 'draft').length;
-  const totalFees = mockFees.length;
+  useEffect(() => {
+    const fetchData = async () => {
+      setIsLoading(true);
+      try {
+        const [postsData, feesData] = await Promise.all([
+          postsApi.getAll(),
+          feesApi.getAll()
+        ]);
+        
+        setPosts(postsData);
+        setStats({
+          total: postsData.length,
+          published: postsData.filter((p) => p.status === 'published').length,
+          drafts: postsData.filter((p) => p.status === 'draft').length,
+          fees: feesData.length
+        });
+      } catch (error) {
+        console.error('Failed to fetch dashboard data:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
 
-  const recentPosts = mockPosts.slice(0, 5);
+  const recentPosts = posts.slice(0, 5);
 
   return (
     <AdminLayout>
@@ -43,10 +70,16 @@ export default function AdminDashboard() {
                 <FileText className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{mockPosts.length}</div>
-                <p className="text-xs text-muted-foreground">
-                  {publishedPosts} published, {draftPosts} drafts
-                </p>
+                {isLoading ? (
+                  <Loader2 className="h-6 w-6 animate-spin" />
+                ) : (
+                  <>
+                    <div className="text-2xl font-bold">{stats.total}</div>
+                    <p className="text-xs text-muted-foreground">
+                      {stats.published} published, {stats.drafts} drafts
+                    </p>
+                  </>
+                )}
               </CardContent>
             </Card>
             <Card>
@@ -55,8 +88,14 @@ export default function AdminDashboard() {
                 <FileText className="h-4 w-4 text-accent" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{publishedPosts}</div>
-                <p className="text-xs text-muted-foreground">Live on website</p>
+                {isLoading ? (
+                  <Loader2 className="h-6 w-6 animate-spin" />
+                ) : (
+                  <>
+                    <div className="text-2xl font-bold">{stats.published}</div>
+                    <p className="text-xs text-muted-foreground">Live on website</p>
+                  </>
+                )}
               </CardContent>
             </Card>
             <Card>
@@ -65,8 +104,14 @@ export default function AdminDashboard() {
                 <FileText className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{draftPosts}</div>
-                <p className="text-xs text-muted-foreground">Awaiting publication</p>
+                {isLoading ? (
+                  <Loader2 className="h-6 w-6 animate-spin" />
+                ) : (
+                  <>
+                    <div className="text-2xl font-bold">{stats.drafts}</div>
+                    <p className="text-xs text-muted-foreground">Awaiting publication</p>
+                  </>
+                )}
               </CardContent>
             </Card>
             <Card>
@@ -75,8 +120,14 @@ export default function AdminDashboard() {
                 <DollarSign className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{totalFees}</div>
-                <p className="text-xs text-muted-foreground">Services listed</p>
+                {isLoading ? (
+                  <Loader2 className="h-6 w-6 animate-spin" />
+                ) : (
+                  <>
+                    <div className="text-2xl font-bold">{stats.fees}</div>
+                    <p className="text-xs text-muted-foreground">Services listed</p>
+                  </>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -139,36 +190,49 @@ export default function AdminDashboard() {
               </Button>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {recentPosts.map((post) => (
-                  <div
-                    key={post.id}
-                    className="flex items-center justify-between p-4 rounded-lg bg-muted/50"
-                  >
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-medium truncate">{post.title}</h3>
-                      <div className="flex items-center gap-2 mt-1">
-                        <span
-                          className={`text-xs px-2 py-0.5 rounded-full ${
-                            post.status === 'published'
-                              ? 'bg-accent/10 text-accent'
-                              : 'bg-muted text-muted-foreground'
-                          }`}
-                        >
-                          {post.status}
-                        </span>
-                        <span className="text-xs text-muted-foreground">{post.category}</span>
-                        <span className="text-xs text-muted-foreground">
-                          {new Date(post.updatedAt).toLocaleDateString()}
-                        </span>
+              {isLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                </div>
+              ) : recentPosts.length === 0 ? (
+                <div className="text-center py-12 text-muted-foreground">
+                  <p>No posts yet. Create your first post!</p>
+                  <Button asChild className="mt-4">
+                    <Link to="/admin/posts/new">Create Post</Link>
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {recentPosts.map((post) => (
+                    <div
+                      key={post.id}
+                      className="flex items-center justify-between p-4 rounded-lg bg-muted/50"
+                    >
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-medium truncate">{post.title}</h3>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span
+                            className={`text-xs px-2 py-0.5 rounded-full ${
+                              post.status === 'published'
+                                ? 'bg-accent/10 text-accent'
+                                : 'bg-muted text-muted-foreground'
+                            }`}
+                          >
+                            {post.status}
+                          </span>
+                          <span className="text-xs text-muted-foreground">{post.category}</span>
+                          <span className="text-xs text-muted-foreground">
+                            {new Date(post.updatedAt).toLocaleDateString()}
+                          </span>
+                        </div>
                       </div>
+                      <Button asChild variant="ghost" size="sm">
+                        <Link to={`/admin/posts/${post.id}/edit`}>Edit</Link>
+                      </Button>
                     </div>
-                    <Button asChild variant="ghost" size="sm">
-                      <Link to={`/admin/posts/${post.id}/edit`}>Edit</Link>
-                    </Button>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>

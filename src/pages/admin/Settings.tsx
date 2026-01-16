@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Save } from 'lucide-react';
+import { Save, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -8,51 +8,63 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Separator } from '@/components/ui/separator';
 import { AdminLayout } from '@/components/layout/AdminLayout';
 import { Container } from '@/components/layout/Container';
-import { mockSettings } from '@/lib/mockData';
 import { settingsApi } from '@/lib/api';
 import { Settings as SettingsType } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 
 export default function Settings() {
   const { toast } = useToast();
-  const [settings, setSettings] = useState<SettingsType>(mockSettings);
+  const [settings, setSettings] = useState<SettingsType | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-
-  const handleChange = (field: keyof SettingsType, value: string) => {
-    setSettings((prev) => ({ ...prev, [field]: value }));
-  };
-
-  const handleAddressChange = (field: keyof SettingsType['address'], value: string) => {
-    setSettings((prev) => ({
-      ...prev,
-      address: { ...prev.address, [field]: value },
-    }));
-  };
-
-  const handleSocialChange = (field: keyof SettingsType['socialLinks'], value: string) => {
-    setSettings((prev) => ({
-      ...prev,
-      socialLinks: { ...prev.socialLinks, [field]: value },
-    }));
-  };
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchSettings = async () => {
+      setIsLoading(true);
+      setError(null);
       try {
         const data = await settingsApi.get();
         setSettings(data);
-      } catch (error) {
+      } catch (err) {
+        console.error('Failed to load settings:', err);
+        setError('Failed to load settings. Please try again.');
         toast({
           title: 'Error',
           description: 'Failed to load settings',
           variant: 'destructive',
         });
+      } finally {
+        setIsLoading(false);
       }
     };
     fetchSettings();
   }, [toast]);
 
+  const handleChange = (field: keyof SettingsType, value: string) => {
+    if (!settings) return;
+    setSettings((prev) => prev ? ({ ...prev, [field]: value }) : null);
+  };
+
+  const handleAddressChange = (field: keyof SettingsType['address'], value: string) => {
+    if (!settings) return;
+    setSettings((prev) => prev ? ({
+      ...prev,
+      address: { ...prev.address, [field]: value },
+    }) : null);
+  };
+
+  const handleSocialChange = (field: keyof SettingsType['socialLinks'], value: string) => {
+    if (!settings) return;
+    setSettings((prev) => prev ? ({
+      ...prev,
+      socialLinks: { ...prev.socialLinks, [field]: value },
+    }) : null);
+  };
+
   const handleSave = async () => {
+    if (!settings) return;
+    
     setIsSaving(true);
     try {
       await settingsApi.update(settings);
@@ -60,16 +72,41 @@ export default function Settings() {
         title: 'Settings saved',
         description: 'Your settings have been successfully updated.',
       });
-    } catch (error) {
-      console.error('Save error:', error);
+    } catch (err) {
+      console.error('Save error:', err);
       toast({
-        title: `Failed to save settings: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        title: `Failed to save settings: ${err instanceof Error ? err.message : 'Unknown error'}`,
         variant: 'destructive',
       });
     } finally {
       setIsSaving(false);
     }
   };
+
+  if (isLoading) {
+    return (
+      <AdminLayout>
+        <Container>
+          <div className="flex items-center justify-center min-h-[60vh]">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        </Container>
+      </AdminLayout>
+    );
+  }
+
+  if (error || !settings) {
+    return (
+      <AdminLayout>
+        <Container>
+          <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+            <p className="text-destructive">{error || 'Failed to load settings'}</p>
+            <Button onClick={() => window.location.reload()}>Retry</Button>
+          </div>
+        </Container>
+      </AdminLayout>
+    );
+  }
 
   return (
     <AdminLayout>
@@ -88,7 +125,11 @@ export default function Settings() {
               onClick={handleSave}
               disabled={isSaving}
             >
-              <Save className="mr-2 h-4 w-4" />
+              {isSaving ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Save className="mr-2 h-4 w-4" />
+              )}
               {isSaving ? 'Saving...' : 'Save Changes'}
             </Button>
           </div>
@@ -285,7 +326,11 @@ export default function Settings() {
               onClick={handleSave}
               disabled={isSaving}
             >
-              <Save className="mr-2 h-4 w-4" />
+              {isSaving ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Save className="mr-2 h-4 w-4" />
+              )}
               {isSaving ? 'Saving...' : 'Save Changes'}
             </Button>
           </div>

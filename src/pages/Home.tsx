@@ -1,11 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Shield, FileText, Scale, Award } from 'lucide-react';
+import { ArrowRight, Shield, FileText, Scale, Award, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { PublicLayout } from '@/components/layout/PublicLayout';
 import { Container } from '@/components/layout/Container';
-import { mockPosts, mockSettings } from '@/lib/mockData';
 import { settingsApi, postsApi } from '@/lib/api';
 import { Post, Settings } from '@/types';
 
@@ -33,11 +32,15 @@ const valueProps = [
 ];
 
 export default function Home() {
-  const [settings, setSettings] = useState<Settings>(mockSettings);
-  const [featuredPosts, setFeaturedPosts] = useState<Post[]>(mockPosts.filter((p) => p.status === 'published').slice(0, 3));
+  const [settings, setSettings] = useState<Settings | null>(null);
+  const [featuredPosts, setFeaturedPosts] = useState<Post[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
+      setIsLoading(true);
+      setError(null);
       try {
         const [settingsData, postsData] = await Promise.all([
           settingsApi.get(),
@@ -46,12 +49,36 @@ export default function Home() {
 
         setSettings(settingsData);
         setFeaturedPosts(postsData.slice(0, 3));
-      } catch (error) {
-        console.error('Failed to fetch home data:', error);
+      } catch (err) {
+        console.error('Failed to fetch home data:', err);
+        setError('Failed to load content. Please try again later.');
+      } finally {
+        setIsLoading(false);
       }
     };
     fetchData();
   }, []);
+
+  if (isLoading) {
+    return (
+      <PublicLayout>
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </PublicLayout>
+    );
+  }
+
+  if (error || !settings) {
+    return (
+      <PublicLayout>
+        <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+          <p className="text-destructive">{error || 'Failed to load settings'}</p>
+          <Button onClick={() => window.location.reload()}>Retry</Button>
+        </div>
+      </PublicLayout>
+    );
+  }
 
   return (
     <PublicLayout>
@@ -127,41 +154,49 @@ export default function Home() {
               </Link>
             </Button>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {featuredPosts.map((post) => (
-              <Card key={post.id} className="overflow-hidden border-border bg-card hover:shadow-lg transition-shadow">
-                {post.coverImage && (
-                  <div className="aspect-video overflow-hidden">
-                    <img
-                      src={post.coverImage}
-                      alt={post.title}
-                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                    />
-                  </div>
-                )}
-                <CardContent className="pt-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-xs font-medium px-2 py-1 rounded-full bg-accent/10 text-accent">
-                      {post.category}
-                    </span>
-                    <span className="text-xs text-muted-foreground">
-                      {new Date(post.publishedAt!).toLocaleDateString('en-IN', {
-                        month: 'short',
-                        day: 'numeric',
-                        year: 'numeric',
-                      })}
-                    </span>
-                  </div>
-                  <h3 className="font-serif font-semibold text-lg mb-2 line-clamp-2">
-                    <Link to={`/blog/${post.slug}`} className="hover:text-accent transition-colors">
-                      {post.title}
-                    </Link>
-                  </h3>
-                  <p className="text-sm text-muted-foreground line-clamp-2">{post.excerpt}</p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+          {featuredPosts.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground">No posts available yet.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {featuredPosts.map((post) => (
+                <Card key={post.id} className="overflow-hidden border-border bg-card hover:shadow-lg transition-shadow">
+                  {post.coverImage && (
+                    <div className="aspect-video overflow-hidden">
+                      <img
+                        src={post.coverImage}
+                        alt={post.title}
+                        className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                      />
+                    </div>
+                  )}
+                  <CardContent className="pt-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-xs font-medium px-2 py-1 rounded-full bg-accent/10 text-accent">
+                        {post.category}
+                      </span>
+                      {post.publishedAt && (
+                        <span className="text-xs text-muted-foreground">
+                          {new Date(post.publishedAt).toLocaleDateString('en-IN', {
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric',
+                          })}
+                        </span>
+                      )}
+                    </div>
+                    <h3 className="font-serif font-semibold text-lg mb-2 line-clamp-2">
+                      <Link to={`/blog/${post.slug}`} className="hover:text-accent transition-colors">
+                        {post.title}
+                      </Link>
+                    </h3>
+                    <p className="text-sm text-muted-foreground line-clamp-2">{post.excerpt}</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
           <div className="mt-8 text-center sm:hidden">
             <Button asChild variant="outline">
               <Link to="/blog">

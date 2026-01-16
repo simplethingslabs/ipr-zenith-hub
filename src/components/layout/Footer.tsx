@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Mail, Phone, MapPin, Linkedin, Twitter } from 'lucide-react';
-import { mockSettings } from '@/lib/mockData';
 import { settingsApi } from '@/lib/api';
 import { Settings } from '@/types';
 
@@ -23,7 +22,8 @@ const practiceAreas = [
 ];
 
 export function Footer() {
-  const [settings, setSettings] = useState<Settings>(mockSettings);
+  const [settings, setSettings] = useState<Settings | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchSettings = async () => {
@@ -32,11 +32,88 @@ export function Footer() {
         setSettings(data);
       } catch (error) {
         console.error('Failed to fetch settings:', error);
+      } finally {
+        setIsLoading(false);
       }
     };
     fetchSettings();
   }, []);
+
   const currentYear = new Date().getFullYear();
+
+  // Show minimal footer while loading or if settings failed to load
+  if (isLoading || !settings) {
+    return (
+      <footer className="bg-primary text-primary-foreground">
+        <div className="container py-12 md:py-16">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {/* Brand */}
+            <div className="lg:col-span-1">
+              <Link to="/" className="inline-block mb-4">
+                <span className="text-2xl font-serif font-bold">
+                  IPR<span className="text-accent">Central</span>
+                </span>
+              </Link>
+              <p className="text-primary-foreground/80 text-sm leading-relaxed mb-4">
+                Expert intellectual property consultancy for businesses and individuals.
+              </p>
+            </div>
+
+            {/* Quick Links */}
+            <div>
+              <h3 className="font-serif font-semibold text-lg mb-4">Quick Links</h3>
+              <ul className="space-y-2">
+                {quickLinks.map((link) => (
+                  <li key={link.to}>
+                    <Link
+                      to={link.to}
+                      className="text-sm text-primary-foreground/80 hover:text-accent transition-colors"
+                    >
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Practice Areas */}
+            <div>
+              <h3 className="font-serif font-semibold text-lg mb-4">Practice Areas</h3>
+              <ul className="space-y-2">
+                {practiceAreas.map((link) => (
+                  <li key={link.to}>
+                    <Link
+                      to={link.to}
+                      className="text-sm text-primary-foreground/80 hover:text-accent transition-colors"
+                    >
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+
+          {/* Bottom Bar */}
+          <div className="mt-12 pt-8 border-t border-primary-foreground/20">
+            <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+              <p className="text-sm text-primary-foreground/60">
+                © {currentYear} IPR Central. All rights reserved.
+              </p>
+              <div className="flex space-x-6 text-sm text-primary-foreground/60">
+                <Link to="/privacy" className="hover:text-accent transition-colors">
+                  Privacy Policy
+                </Link>
+                <Link to="/terms" className="hover:text-accent transition-colors">
+                  Terms of Service
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </footer>
+    );
+  }
 
   return (
     <footer className="bg-primary text-primary-foreground">

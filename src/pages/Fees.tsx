@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -26,15 +26,18 @@ export default function Fees() {
   const [audience, setAudience] = useState<Audience>('Individuals');
   const [fees, setFees] = useState<FeeItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchFees = async () => {
       setIsLoading(true);
+      setError(null);
       try {
         const data = await feesApi.getAll({ audience });
         setFees(data);
-      } catch (error) {
-        console.error('Failed to fetch fees:', error);
+      } catch (err) {
+        console.error('Failed to fetch fees:', err);
+        setError('Failed to load fees. Please try again later.');
       } finally {
         setIsLoading(false);
       }
@@ -68,35 +71,50 @@ export default function Fees() {
             </TabsList>
 
             <TabsContent value={audience}>
-              <div className="space-y-12">
-                {categories.map((category) => (
-                  <div key={category}>
-                    <h2 className="text-2xl font-bold mb-6">{category}</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {fees
-                        .filter((fee) => fee.category === category)
-                        .map((fee) => (
-                          <Card key={fee.id} className="border-border">
-                            <CardContent className="pt-6">
-                              <div className="flex items-start justify-between mb-2">
-                                <h3 className="font-semibold text-lg">{fee.name}</h3>
-                                <span className="text-xs px-2 py-1 rounded-full bg-muted text-muted-foreground">
-                                  {fee.type === 'fixed' ? 'Fixed' : 'Variable'}
-                                </span>
-                              </div>
-                              <p className="text-2xl font-bold text-accent mb-2">
-                                {formatPrice(fee.priceMin, fee.priceMax)}
-                              </p>
-                              {fee.notes && (
-                                <p className="text-sm text-muted-foreground">{fee.notes}</p>
-                              )}
-                            </CardContent>
-                          </Card>
-                        ))}
+              {isLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                </div>
+              ) : error ? (
+                <div className="flex flex-col items-center justify-center py-12 gap-4">
+                  <p className="text-destructive">{error}</p>
+                  <Button onClick={() => window.location.reload()}>Retry</Button>
+                </div>
+              ) : fees.length === 0 ? (
+                <div className="text-center py-12">
+                  <p className="text-muted-foreground">No fees available for {audience.toLowerCase()} yet.</p>
+                </div>
+              ) : (
+                <div className="space-y-12">
+                  {categories.map((category) => (
+                    <div key={category}>
+                      <h2 className="text-2xl font-bold mb-6">{category}</h2>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {fees
+                          .filter((fee) => fee.category === category)
+                          .map((fee) => (
+                            <Card key={fee.id} className="border-border">
+                              <CardContent className="pt-6">
+                                <div className="flex items-start justify-between mb-2">
+                                  <h3 className="font-semibold text-lg">{fee.name}</h3>
+                                  <span className="text-xs px-2 py-1 rounded-full bg-muted text-muted-foreground">
+                                    {fee.type === 'fixed' ? 'Fixed' : 'Variable'}
+                                  </span>
+                                </div>
+                                <p className="text-2xl font-bold text-accent mb-2">
+                                  {formatPrice(fee.priceMin, fee.priceMax)}
+                                </p>
+                                {fee.notes && (
+                                  <p className="text-sm text-muted-foreground">{fee.notes}</p>
+                                )}
+                              </CardContent>
+                            </Card>
+                          ))}
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </TabsContent>
           </Tabs>
 

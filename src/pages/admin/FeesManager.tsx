@@ -1,5 +1,5 @@
-import { useState, useMemo } from 'react';
-import { Plus, Search, Edit, Trash2 } from 'lucide-react';
+import { useState, useMemo, useEffect } from 'react';
+import { Plus, Search, Edit, Trash2, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -43,7 +43,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { AdminLayout } from '@/components/layout/AdminLayout';
 import { Container } from '@/components/layout/Container';
-import { mockFees } from '@/lib/mockData';
+import { feesApi } from '@/lib/api';
 import { FeeItem, Audience, FeeType } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 
@@ -69,12 +69,32 @@ const initialFormData: FeeFormData = {
 
 export default function FeesManager() {
   const { toast } = useToast();
-  const [fees, setFees] = useState<FeeItem[]>(mockFees);
+  const [fees, setFees] = useState<FeeItem[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [audienceFilter, setAudienceFilter] = useState<Audience | 'all'>('all');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingFee, setEditingFee] = useState<FeeItem | null>(null);
   const [formData, setFormData] = useState<FeeFormData>(initialFormData);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchFees = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const data = await feesApi.getAll();
+        setFees(data);
+      } catch (err) {
+        console.error('Failed to fetch fees:', err);
+        setError('Failed to load fees. Please try again.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchFees();
+  }, []);
 
   const filteredFees = useMemo(() => {
     return fees.filter((fee) => {
@@ -120,7 +140,7 @@ export default function FeesManager() {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!formData.name.trim()) {
       toast({
         title: 'Error',
@@ -148,42 +168,63 @@ export default function FeesManager() {
       return;
     }
 
-    const feeData: FeeItem = {
-      id: editingFee?.id || Date.now().toString(),
-      name: formData.name,
-      audience: formData.audience,
-      type: formData.type,
-      priceMin: Number(formData.priceMin),
-      priceMax: formData.type === 'variable' ? Number(formData.priceMax) : undefined,
-      category: formData.category,
-      notes: formData.notes || undefined,
-      createdAt: editingFee?.createdAt || new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
+    setIsSaving(true);
+    try {
+      const feeData = {
+        name: formData.name,
+        audience: formData.audience,
+        type: formData.type,
+        priceMin: Number(formData.priceMin),
+        priceMax: formData.type === 'variable' ? Number(formData.priceMax) : undefined,
+        category: formData.category,
+        notes: formData.notes || undefined,
+      };
 
-    if (editingFee) {
-      setFees(fees.map((f) => (f.id === editingFee.id ? feeData : f)));
+      if (editingFee) {
+        const updated = await feesApi.update(editingFee.id, feeData);
+        setFees(fees.map((f) => (f.id === editingFee.id ? updated : f)));
+        toast({
+          title: 'Fee updated',
+          description: 'The fee item has been successfully updated.',
+        });
+      } else {
+        const created = await feesApi.create(feeData);
+        setFees([...fees, created]);
+        toast({
+          title: 'Fee created',
+          description: 'The fee item has been successfully created.',
+        });
+      }
+
+      handleCloseDialog();
+    } catch (err) {
+      console.error('Failed to save fee:', err);
       toast({
-        title: 'Fee updated',
-        description: 'The fee item has been successfully updated.',
+        title: 'Error',
+        description: 'Failed to save fee. Please try again.',
+        variant: 'destructive',
       });
-    } else {
-      setFees([...fees, feeData]);
-      toast({
-        title: 'Fee created',
-        description: 'The fee item has been successfully created.',
-      });
+    } finally {
+      setIsSaving(false);
     }
-
-    handleCloseDialog();
   };
 
-  const handleDelete = (id: string) => {
-    setFees(fees.filter((fee) => fee.id !== id));
-    toast({
-      title: 'Fee deleted',
-      description: 'The fee item has been successfully deleted.',
-    });
+  const handleDelete = async (id: string) => {
+    try {
+      await feesApi.delete(id);
+      setFees(fees.filter((fee) => fee.id !== id));
+      toast({
+        title: 'Fee deleted',
+        description: 'The fee item has been successfully deleted.',
+      });
+    } catch (err) {
+      console.error('Failed to delete fee:', err);
+      toast({
+        title: 'Error',
+        description: 'Failed to delete fee. Please try again.',
+        variant: 'destructive',
+      });
+    }
   };
 
   return (
@@ -316,8 +357,16 @@ export default function FeesManager() {
                   <Button
                     className="bg-accent text-accent-foreground hover:bg-accent/90"
                     onClick={handleSave}
+                    disabled={isSaving}
                   >
-                    {editingFee ? 'Update' : 'Create'}
+                    {isSaving ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Saving...
+                      </>
+                    ) : (
+                      editingFee ? 'Update' : 'Create'
+                    )}
                   </Button>
                 </DialogFooter>
               </DialogContent>
@@ -357,9 +406,23 @@ export default function FeesManager() {
               <CardTitle>All Fees ({filteredFees.length})</CardTitle>
             </CardHeader>
             <CardContent>
-              {filteredFees.length === 0 ? (
+              {isLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                </div>
+              ) : error ? (
+                <div className="flex flex-col items-center justify-center py-12 gap-4">
+                  <p className="text-destructive">{error}</p>
+                  <Button onClick={() => window.location.reload()}>Retry</Button>
+                </div>
+              ) : filteredFees.length === 0 ? (
                 <div className="text-center py-12 text-muted-foreground">
                   <p>No fee items found matching your criteria.</p>
+                  {fees.length === 0 && (
+                    <Button className="mt-4" onClick={() => handleOpenDialog()}>
+                      Add your first fee
+                    </Button>
+                  )}
                 </div>
               ) : (
                 <div className="overflow-x-auto">
