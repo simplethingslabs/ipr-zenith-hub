@@ -1,11 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Award, Users, Target, Clock } from 'lucide-react';
+import { ArrowRight, Award, Users, Target, Clock, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { PublicLayout } from '@/components/layout/PublicLayout';
 import { Container } from '@/components/layout/Container';
-import { mockSettings } from '@/lib/mockData';
 import { settingsApi } from '@/lib/api';
 import { Settings } from '@/types';
 
@@ -43,7 +42,8 @@ const milestones = [
 ];
 
 export default function About() {
-  const [settings, setSettings] = useState<Settings>(mockSettings);
+  const [settings, setSettings] = useState<Settings | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchSettings = async () => {
@@ -52,6 +52,8 @@ export default function About() {
         setSettings(data);
       } catch (error) {
         console.error('Failed to fetch settings:', error);
+      } finally {
+        setIsLoading(false);
       }
     };
     fetchSettings();
@@ -64,9 +66,16 @@ export default function About() {
         <Container>
           <div className="max-w-3xl">
             <h1 className="text-4xl md:text-5xl font-bold mb-6">About Us</h1>
-            <p className="text-lg text-muted-foreground">
-              {settings.bio}
-            </p>
+            {isLoading ? (
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Loading...
+              </div>
+            ) : (
+              <p className="text-lg text-muted-foreground">
+                {settings?.bio || 'Welcome to IPR Central - your trusted partner in intellectual property protection.'}
+              </p>
+            )}
           </div>
         </Container>
       </section>
