@@ -1,8 +1,8 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useEffect, useRef, useState } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { NavLink } from '@/components/NavLink';
+import { WhatsAppCta } from '@/components/WhatsAppCta';
 import { cn } from '@/lib/utils';
 
 const navLinks = [
@@ -17,25 +17,44 @@ const navLinks = [
 
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { pathname } = useLocation();
+  const toggleRef = useRef<HTMLButtonElement>(null);
+
+  // Close the drawer on navigation. Previously each link had its own onClick to
+  // do this, which meant any new link silently left the menu open.
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [pathname]);
+
+  // Escape should close an open drawer, and focus should return to the toggle.
+  useEffect(() => {
+    if (!mobileMenuOpen) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setMobileMenuOpen(false);
+        toggleRef.current?.focus();
+      }
+    };
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, [mobileMenuOpen]);
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center justify-between">
-        {/* Logo */}
         <Link to="/" className="flex items-center space-x-2">
-          <span className="text-2xl font-serif font-bold text-primary">
+          <span className="font-serif text-2xl font-bold text-primary">
             IPR<span className="text-accent">Central</span>
           </span>
         </Link>
 
-        {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center space-x-1">
+        <nav className="hidden items-center space-x-1 md:flex" aria-label="Main">
           {navLinks.map((link) => (
             <NavLink
               key={link.to}
               to={link.to}
               end={link.to === '/'}
-              className="px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors rounded-md hover:bg-muted"
+              className="rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
               activeClassName="text-foreground bg-muted"
             >
               {link.label}
@@ -43,62 +62,51 @@ export function Header() {
           ))}
         </nav>
 
-        {/* Desktop CTA & Admin */}
-        <div className="hidden md:flex items-center space-x-4">
-          <Link
-            to="/admin"
-            className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-          >
-            Admin
-          </Link>
-          <Button asChild size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90">
-            <Link to="/contact">Get Started</Link>
-          </Button>
+        <div className="hidden items-center md:flex">
+          <WhatsAppCta size="sm">Get Started</WhatsAppCta>
         </div>
 
-        {/* Mobile Menu Button */}
         <button
-          className="md:hidden p-2 text-foreground"
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          aria-label="Toggle menu"
+          ref={toggleRef}
+          type="button"
+          className="p-2 text-foreground md:hidden"
+          onClick={() => setMobileMenuOpen((open) => !open)}
+          aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
+          aria-expanded={mobileMenuOpen}
+          aria-controls="mobile-nav"
         >
           {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
         </button>
       </div>
 
-      {/* Mobile Menu */}
+      {/*
+        `hidden` rather than opacity/visibility: the old version kept the panel in
+        the accessibility tree and tab order while invisible, so keyboard users
+        tabbed through a menu they could not see.
+      */}
       <div
+        id="mobile-nav"
+        hidden={!mobileMenuOpen}
         className={cn(
-          'md:hidden absolute top-16 left-0 right-0 bg-background border-b border-border transition-all duration-200',
-          mobileMenuOpen ? 'opacity-100 visible' : 'opacity-0 invisible'
+          'absolute left-0 right-0 top-16 border-b border-border bg-background md:hidden',
         )}
       >
-        <nav className="container py-4 flex flex-col space-y-2">
+        <nav className="container flex flex-col space-y-2 py-4" aria-label="Mobile">
           {navLinks.map((link) => (
             <NavLink
               key={link.to}
               to={link.to}
               end={link.to === '/'}
-              className="px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors rounded-md hover:bg-muted"
+              className="rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
               activeClassName="text-foreground bg-muted"
-              onClick={() => setMobileMenuOpen(false)}
             >
               {link.label}
             </NavLink>
           ))}
-          <div className="pt-4 border-t border-border flex flex-col space-y-2">
-            <Link
-              to="/admin"
-              className="px-3 py-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Admin Login
-            </Link>
-            <Button asChild size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90">
-              <Link to="/contact" onClick={() => setMobileMenuOpen(false)}>
-                Get Started
-              </Link>
-            </Button>
+          <div className="border-t border-border pt-4">
+            <WhatsAppCta size="sm" className="w-full">
+              Get Started
+            </WhatsAppCta>
           </div>
         </nav>
       </div>

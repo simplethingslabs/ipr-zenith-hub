@@ -12,11 +12,21 @@
     "moduleDetection": "force",
     "noEmit": true,
 
+    /* Node built-ins and process are available in build tooling. */
+    "types": ["node"],
+
+    /* Resolve the same "@/" alias the app uses, so build scripts can import
+       from src/content/ without duplicating the content. */
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    },
+
     /* Linting */
     "strict": true,
     "noUnusedLocals": false,
     "noUnusedParameters": false,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["vite.config.ts"]
+  "include": ["vite.config.ts", "scripts/**/*.ts"]
 }

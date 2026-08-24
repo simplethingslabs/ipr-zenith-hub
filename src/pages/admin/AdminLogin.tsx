@@ -126,9 +126,6 @@ export default function AdminLogin() {
               )}
             </Button>
           </form>
-          <p className="mt-4 text-center text-sm text-muted-foreground">
-            For demo: use any valid email and password (6+ chars)
-          </p>
         </CardContent>
       </Card>
     </div>

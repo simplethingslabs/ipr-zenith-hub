@@ -1,14 +1,9 @@
-User-agent: Googlebot
-Allow: /
-
-User-agent: Bingbot
-Allow: /
-
-User-agent: Twitterbot
-Allow: /
-
-User-agent: facebookexternalhit
-Allow: /
+# The previous version listed several crawlers individually and allowed each in
+# turn, which had no effect beyond the catch-all rule below.
 
 User-agent: *
 Allow: /
+Disallow: /admin
+
+# TODO(owner): update the host below if the production domain differs.
+Sitemap: https://iprcentral.in/sitemap.xml

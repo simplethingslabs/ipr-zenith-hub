@@ -1,81 +1,28 @@
-import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { ArrowRight, Award, Users, Target, Clock, Loader2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { PublicLayout } from '@/components/layout/PublicLayout';
 import { Container } from '@/components/layout/Container';
-import { settingsApi } from '@/lib/api';
-import { Settings } from '@/types';
-
-const values = [
-  {
-    icon: Target,
-    title: 'Client-Focused',
-    description: 'Your goals drive our strategy. We tailor our approach to your specific needs and business objectives.',
-  },
-  {
-    icon: Award,
-    title: 'Excellence',
-    description: 'We maintain the highest standards in everything we do, from legal analysis to client communication.',
-  },
-  {
-    icon: Users,
-    title: 'Accessibility',
-    description: 'Expert IP services shouldn\'t be exclusive. We make professional IP protection accessible to all.',
-  },
-  {
-    icon: Clock,
-    title: 'Responsiveness',
-    description: 'Time matters in IP. We respond promptly and keep you informed at every stage of your matter.',
-  },
-];
-
-const milestones = [
-  { year: '2018', event: 'IPR Central founded with a mission to democratize IP services' },
-  { year: '2019', event: 'Expanded practice to include patent services' },
-  { year: '2020', event: 'Launched digital-first client service platform' },
-  { year: '2021', event: 'Reached 500+ successful registrations milestone' },
-  { year: '2022', event: 'Introduced specialized startup IP packages' },
-  { year: '2023', event: 'Expanded team and opened advisory services' },
-  { year: '2024', event: 'Celebrating 1000+ clients served' },
-];
+import { Card, CardContent } from '@/components/ui/card';
+import { Seo } from '@/components/Seo';
+import { WhatsAppCta } from '@/components/WhatsAppCta';
+import { useSiteSettings } from '@/lib/content';
+import { mission, pullQuote, values, milestones } from '@/content/about';
 
 export default function About() {
-  const [settings, setSettings] = useState<Settings | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchSettings = async () => {
-      try {
-        const data = await settingsApi.get();
-        setSettings(data);
-      } catch (error) {
-        console.error('Failed to fetch settings:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchSettings();
-  }, []);
+  const settings = useSiteSettings();
 
   return (
     <PublicLayout>
+      <Seo
+        path="/about"
+        title="About Us"
+        description="IPR Central is an intellectual property consultancy working with founders, creators and established businesses across trademarks, patents, copyrights and designs."
+      />
+
       {/* Hero */}
-      <section className="py-16 md:py-24 bg-muted/30">
+      <section className="bg-muted/30 py-16 md:py-24">
         <Container>
           <div className="max-w-3xl">
-            <h1 className="text-4xl md:text-5xl font-bold mb-6">About Us</h1>
-            {isLoading ? (
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Loading...
-              </div>
-            ) : (
-              <p className="text-lg text-muted-foreground">
-                {settings?.bio || 'Welcome to IPR Central - your trusted partner in intellectual property protection.'}
-              </p>
-            )}
+            <h1 className="mb-6 text-4xl font-bold md:text-5xl">About Us</h1>
+            <p className="text-lg text-muted-foreground">{settings.bio}</p>
           </div>
         </Container>
       </section>
@@ -83,46 +30,42 @@ export default function About() {
       {/* Mission */}
       <section className="py-16 md:py-24">
         <Container>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+          <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-2">
             <div>
-              <h2 className="text-3xl font-bold mb-6">Our Mission</h2>
-              <p className="text-muted-foreground mb-4">
-                At IPR Central, we believe that every innovator, creator, and business deserves access to quality intellectual property protection. Our mission is to demystify IP law and make professional IP services accessible, affordable, and effective.
-              </p>
-              <p className="text-muted-foreground mb-4">
-                We combine deep legal expertise with a modern, client-centric approach. Whether you're an individual inventor protecting your first patent or a multinational corporation managing a global trademark portfolio, we provide the same level of dedication and expertise.
-              </p>
-              <p className="text-muted-foreground">
-                Our team stays at the forefront of IP developments, from emerging technologies to evolving regulations, ensuring you receive advice that's both legally sound and practically relevant.
-              </p>
+              <h2 className="mb-6 text-3xl font-bold">Our Mission</h2>
+              {mission.map((paragraph) => (
+                <p key={paragraph.slice(0, 40)} className="mb-4 text-muted-foreground">
+                  {paragraph}
+                </p>
+              ))}
             </div>
-            <div className="bg-primary text-primary-foreground rounded-lg p-8">
-              <blockquote className="text-xl font-serif italic mb-4">
-                "Innovation deserves protection. We're here to ensure your ideas have the legal foundation to thrive."
+            <div className="rounded-lg bg-primary p-8 text-primary-foreground">
+              <blockquote className="mb-4 font-serif text-xl italic">
+                “{pullQuote.quote}”
               </blockquote>
-              <p className="text-primary-foreground/80">— The IPR Central Team</p>
+              <p className="text-primary-foreground/80">{pullQuote.attribution}</p>
             </div>
           </div>
         </Container>
       </section>
 
       {/* Values */}
-      <section className="py-16 md:py-24 bg-muted/30">
+      <section className="bg-muted/30 py-16 md:py-24">
         <Container>
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">Our Values</h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
+          <div className="mb-12 text-center">
+            <h2 className="mb-4 text-3xl font-bold">Our Values</h2>
+            <p className="mx-auto max-w-2xl text-muted-foreground">
               The principles that guide everything we do.
             </p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
             {values.map((value) => (
               <Card key={value.title} className="border-border text-center">
                 <CardContent className="pt-6">
-                  <div className="h-12 w-12 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-4">
+                  <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-accent/10">
                     <value.icon className="h-6 w-6 text-accent" />
                   </div>
-                  <h3 className="font-serif font-semibold text-lg mb-2">{value.title}</h3>
+                  <h3 className="mb-2 font-serif text-lg font-semibold">{value.title}</h3>
                   <p className="text-sm text-muted-foreground">{value.description}</p>
                 </CardContent>
               </Card>
@@ -134,43 +77,51 @@ export default function About() {
       {/* Timeline */}
       <section className="py-16 md:py-24">
         <Container size="narrow">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">Our Journey</h2>
-            <p className="text-muted-foreground">
-              Key milestones in our growth story.
-            </p>
+          <div className="mb-12 text-center">
+            <h2 className="mb-4 text-3xl font-bold">Our Journey</h2>
+            <p className="text-muted-foreground">Key milestones in our growth story.</p>
           </div>
           <div className="relative">
-            <div className="absolute left-4 md:left-1/2 top-0 bottom-0 w-px bg-border md:-translate-x-px" />
-            <div className="space-y-8">
+            <div
+              className="absolute bottom-0 left-4 top-0 w-px bg-border md:left-1/2 md:-translate-x-px"
+              aria-hidden="true"
+            />
+            <ol className="space-y-8">
               {milestones.map((milestone, index) => (
-                <div key={milestone.year} className={`relative flex items-center ${index % 2 === 0 ? 'md:flex-row' : 'md:flex-row-reverse'}`}>
-                  <div className={`w-full md:w-1/2 pl-12 md:pl-0 ${index % 2 === 0 ? 'md:pr-12 md:text-right' : 'md:pl-12'}`}>
-                    <span className="text-accent font-bold">{milestone.year}</span>
+                <li
+                  key={milestone.year}
+                  className={`relative flex items-center ${
+                    index % 2 === 0 ? 'md:flex-row' : 'md:flex-row-reverse'
+                  }`}
+                >
+                  <div
+                    className={`w-full pl-12 md:w-1/2 md:pl-0 ${
+                      index % 2 === 0 ? 'md:pr-12 md:text-right' : 'md:pl-12'
+                    }`}
+                  >
+                    <span className="font-bold text-accent">{milestone.year}</span>
                     <p className="text-muted-foreground">{milestone.event}</p>
                   </div>
-                  <div className="absolute left-4 md:left-1/2 w-3 h-3 rounded-full bg-accent md:-translate-x-1/2" />
-                </div>
+                  <div
+                    className="absolute left-4 h-3 w-3 rounded-full bg-accent md:left-1/2 md:-translate-x-1/2"
+                    aria-hidden="true"
+                  />
+                </li>
               ))}
-            </div>
+            </ol>
           </div>
         </Container>
       </section>
 
       {/* CTA */}
-      <section className="py-16 md:py-24 bg-primary text-primary-foreground">
+      <section className="bg-primary py-16 text-primary-foreground md:py-24">
         <Container>
-          <div className="text-center max-w-2xl mx-auto">
-            <h2 className="text-3xl font-bold mb-4">Ready to Work With Us?</h2>
-            <p className="text-primary-foreground/80 mb-8">
+          <div className="mx-auto max-w-2xl text-center">
+            <h2 className="mb-4 text-3xl font-bold">Ready to Work With Us?</h2>
+            <p className="mb-8 text-primary-foreground/80">
               Let's discuss how we can help protect your intellectual property.
             </p>
-            <Button asChild size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90">
-              <Link to="/contact">
-                Get in Touch
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
-            </Button>
+            <WhatsAppCta size="lg">Get in Touch</WhatsAppCta>
           </div>
         </Container>
       </section>

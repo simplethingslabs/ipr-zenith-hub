@@ -1,62 +1,77 @@
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { Suspense, lazy } from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { ScrollToTop } from '@/components/ScrollToTop';
 
-// Public Pages
-import Home from "./pages/Home";
-import Services from "./pages/Services";
-import PracticeAreas from "./pages/PracticeAreas";
-import Fees from "./pages/Fees";
-import About from "./pages/About";
-import Blog from "./pages/Blog";
-import BlogPost from "./pages/BlogPost";
-import Contact from "./pages/Contact";
-import NotFound from "./pages/NotFound";
+// Public pages — eagerly imported. These are what visitors actually land on and
+// together they are small, so splitting them would only add round-trips.
+import Home from './pages/Home';
+import Services from './pages/Services';
+import PracticeAreas from './pages/PracticeAreas';
+import Fees from './pages/Fees';
+import About from './pages/About';
+import Blog from './pages/Blog';
+import Contact from './pages/Contact';
+import { Privacy, Terms } from './pages/Legal';
+import NotFound from './pages/NotFound';
 
-// Admin Pages
-import AdminLogin from "./pages/admin/AdminLogin";
-import AdminDashboard from "./pages/admin/AdminDashboard";
-import PostsManager from "./pages/admin/PostsManager";
-import PostEditor from "./pages/admin/PostEditor";
-import FeesManager from "./pages/admin/FeesManager";
-import Settings from "./pages/admin/Settings";
+/*
+ * Two lazy boundaries, each for a specific reason.
+ *
+ * `AdminRoutes` is ~2,000 lines of editors, tables and forms — plus zod,
+ * react-hook-form and the Radix dialog/table/toast primitives — that exactly one
+ * person will ever open. It used to sit in the same bundle as the home page.
+ *
+ * `BlogPost` is the only page that renders Markdown, and `marked` + `dompurify`
+ * come to ~24 kB gzipped. Keeping this route lazy stops Vite from emitting a
+ * modulepreload for that chunk on every page in the site.
+ */
+const AdminRoutes = lazy(() => import('./pages/admin/AdminRoutes'));
+const BlogPost = lazy(() => import('./pages/BlogPost'));
 
-const queryClient = new QueryClient();
+function RouteFallback() {
+  return (
+    <div className="flex min-h-screen items-center justify-center text-muted-foreground">
+      Loading…
+    </div>
+  );
+}
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          {/* Public Routes */}
-          <Route path="/" element={<Home />} />
-          <Route path="/services" element={<Services />} />
-          <Route path="/practice-areas" element={<PracticeAreas />} />
-          <Route path="/fees" element={<Fees />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/blog" element={<Blog />} />
-          <Route path="/blog/:slug" element={<BlogPost />} />
-          <Route path="/contact" element={<Contact />} />
+  <BrowserRouter>
+    <ScrollToTop />
+    <Routes>
+      {/* Public */}
+      <Route path="/" element={<Home />} />
+      <Route path="/services" element={<Services />} />
+      <Route path="/practice-areas" element={<PracticeAreas />} />
+      <Route path="/fees" element={<Fees />} />
+      <Route path="/about" element={<About />} />
+      <Route path="/blog" element={<Blog />} />
+      <Route
+        path="/blog/:slug"
+        element={
+          <Suspense fallback={<RouteFallback />}>
+            <BlogPost />
+          </Suspense>
+        }
+      />
+      <Route path="/contact" element={<Contact />} />
+      <Route path="/privacy" element={<Privacy />} />
+      <Route path="/terms" element={<Terms />} />
 
-          {/* Admin Routes */}
-          <Route path="/admin/login" element={<AdminLogin />} />
-          <Route path="/admin" element={<AdminDashboard />} />
-          <Route path="/admin/posts" element={<PostsManager />} />
-          <Route path="/admin/posts/new" element={<PostEditor />} />
-          <Route path="/admin/posts/:id/edit" element={<PostEditor />} />
-          <Route path="/admin/fees" element={<FeesManager />} />
-          <Route path="/admin/settings" element={<Settings />} />
-          
-          {/* Catch-all 404 */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
+      {/* Admin */}
+      <Route
+        path="/admin/*"
+        element={
+          <Suspense fallback={<RouteFallback />}>
+            <AdminRoutes />
+          </Suspense>
+        }
+      />
+
+      <Route path="*" element={<NotFound />} />
+    </Routes>
+  </BrowserRouter>
 );
 
 export default App;

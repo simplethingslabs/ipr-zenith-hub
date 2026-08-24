@@ -1,240 +1,189 @@
-import { useState, useEffect } from 'react';
-import { Mail, Phone, MapPin, Send, Loader2 } from 'lucide-react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
+/**
+ * Contact page.
+ *
+ * The previous version rendered a five-field form that POSTed to `/api/contact`.
+ * That made the site's main conversion path depend on the API and database being
+ * up — and when they were not, the submission failed with a generic toast and the
+ * enquiry was lost with no record and no way to follow up.
+ *
+ * This version routes enquiries through channels that cannot fail: WhatsApp,
+ * email and phone. No backend, no validation state, no silent data loss.
+ */
+
+import { Mail, Phone, MapPin, Clock, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { useToast } from '@/hooks/use-toast';
+import { Card, CardContent } from '@/components/ui/card';
 import { PublicLayout } from '@/components/layout/PublicLayout';
 import { Container } from '@/components/layout/Container';
-import { settingsApi, contactApi } from '@/lib/api';
-import { Settings, ContactFormData } from '@/types';
+import { Seo } from '@/components/Seo';
+import { WhatsAppCta, WhatsAppIcon } from '@/components/WhatsAppCta';
+import { useSiteSettings } from '@/lib/content';
+import { officeHours, whatsappUrl } from '@/content/site';
 
-const contactSchema = z.object({
-  name: z.string().min(2, 'Name must be at least 2 characters').max(100),
-  email: z.string().email('Please enter a valid email address'),
-  phone: z.string().optional(),
-  subject: z.string().min(5, 'Subject must be at least 5 characters').max(200),
-  message: z.string().min(20, 'Message must be at least 20 characters').max(2000),
-});
+/**
+ * Each entry becomes a one-tap WhatsApp link with the enquiry type prefilled, so
+ * conversations arrive already labelled instead of starting from "hi".
+ */
+const enquiryTypes = [
+  {
+    label: 'Trademark enquiry',
+    message:
+      "Hello IPR Central, I'd like to discuss registering or protecting a trademark.",
+  },
+  {
+    label: 'Patent enquiry',
+    message: "Hello IPR Central, I'd like to discuss a patent application.",
+  },
+  {
+    label: 'Copyright or design',
+    message:
+      "Hello IPR Central, I'd like to discuss copyright or industrial design protection.",
+  },
+  {
+    label: 'Someone is infringing my IP',
+    message:
+      'Hello IPR Central, I believe someone is infringing my intellectual property and need advice on enforcement.',
+  },
+  {
+    label: 'Business / portfolio review',
+    message:
+      "Hello IPR Central, I'd like to discuss an IP audit or portfolio review for my business.",
+  },
+  {
+    label: 'Something else',
+    message: 'Hello IPR Central, I have a question about intellectual property.',
+  },
+];
 
 export default function Contact() {
-  const [settings, setSettings] = useState<Settings | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const { toast } = useToast();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  useEffect(() => {
-    const fetchSettings = async () => {
-      try {
-        const data = await settingsApi.get();
-        setSettings(data);
-      } catch (error) {
-        console.error('Failed to fetch settings:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchSettings();
-  }, []);
-
-  const {
-    register,
-    handleSubmit,
-    reset,
-    formState: { errors },
-  } = useForm<ContactFormData>({
-    resolver: zodResolver(contactSchema),
-  });
-
-  const onSubmit = async (data: ContactFormData) => {
-    setIsSubmitting(true);
-    try {
-      await contactApi.submit(data);
-
-      toast({
-        title: 'Message Sent!',
-        description: 'Thank you for reaching out. We\'ll get back to you soon.',
-      });
-      reset();
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to send message. Please try again.',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+  const settings = useSiteSettings();
 
   return (
     <PublicLayout>
+      <Seo
+        path="/contact"
+        title="Contact"
+        description="Talk to IPR Central about trademarks, patents, copyrights and designs. Message us on WhatsApp, email or call — we typically reply the same working day."
+      />
+
       {/* Hero */}
-      <section className="py-16 md:py-24 bg-muted/30">
+      <section className="bg-muted/30 py-16 md:py-24">
         <Container>
           <div className="max-w-3xl">
-            <h1 className="text-4xl md:text-5xl font-bold mb-6">Contact Us</h1>
+            <h1 className="mb-6 text-4xl font-bold md:text-5xl">Contact Us</h1>
             <p className="text-lg text-muted-foreground">
-              Have questions about protecting your intellectual property? Get in touch with our team.
+              Have a question about protecting your intellectual property? The fastest way to
+              reach us is WhatsApp — pick the topic closest to your question and we'll take it
+              from there.
             </p>
           </div>
         </Container>
       </section>
 
-      {/* Contact Form & Info */}
+      {/* Primary CTA */}
       <section className="py-16 md:py-24">
         <Container>
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-            {/* Contact Form */}
+          <div className="grid grid-cols-1 gap-12 lg:grid-cols-3">
+            {/* WhatsApp routing */}
             <div className="lg:col-span-2">
-              <h2 className="text-2xl font-bold mb-6">Send Us a Message</h2>
-              <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="name">Name *</Label>
-                    <Input
-                      id="name"
-                      placeholder="Your full name"
-                      {...register('name')}
-                      className={errors.name ? 'border-destructive' : ''}
-                    />
-                    {errors.name && (
-                      <p className="text-sm text-destructive">{errors.name.message}</p>
-                    )}
+              <div className="mb-8 rounded-lg border border-accent/30 bg-accent/5 p-6 sm:p-8">
+                <div className="mb-4 flex items-center gap-3">
+                  <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-lg bg-accent/15">
+                    <WhatsAppIcon className="h-5 w-5 text-accent" />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email *</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      placeholder="your@email.com"
-                      {...register('email')}
-                      className={errors.email ? 'border-destructive' : ''}
-                    />
-                    {errors.email && (
-                      <p className="text-sm text-destructive">{errors.email.message}</p>
-                    )}
+                  <div>
+                    <h2 className="font-serif text-xl font-semibold">Message us on WhatsApp</h2>
+                    <p className="text-sm text-muted-foreground">
+                      Usually answered the same working day.
+                    </p>
                   </div>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="phone">Phone (Optional)</Label>
-                    <Input
-                      id="phone"
-                      type="tel"
-                      placeholder="+91 98765 43210"
-                      {...register('phone')}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="subject">Subject *</Label>
-                    <Input
-                      id="subject"
-                      placeholder="How can we help?"
-                      {...register('subject')}
-                      className={errors.subject ? 'border-destructive' : ''}
-                    />
-                    {errors.subject && (
-                      <p className="text-sm text-destructive">{errors.subject.message}</p>
-                    )}
-                  </div>
+                <WhatsAppCta size="lg" className="w-full sm:w-auto">
+                  Start a Conversation
+                </WhatsAppCta>
+              </div>
+
+              <h3 className="mb-4 font-serif text-lg font-semibold">
+                Or start with your topic
+              </h3>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                {enquiryTypes.map((enquiry) => (
+                  <a
+                    key={enquiry.label}
+                    href={whatsappUrl(enquiry.message)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group flex items-center justify-between gap-3 rounded-lg border border-border bg-card p-4 text-sm font-medium transition-colors hover:border-accent hover:bg-accent/5"
+                  >
+                    <span>{enquiry.label}</span>
+                    <MessageSquare className="h-4 w-4 flex-shrink-0 text-muted-foreground transition-colors group-hover:text-accent" />
+                  </a>
+                ))}
+              </div>
+
+              {/* Fallback channels */}
+              <div className="mt-10 border-t border-border pt-8">
+                <h3 className="mb-4 font-serif text-lg font-semibold">Prefer email or phone?</h3>
+                <div className="flex flex-col gap-3 sm:flex-row">
+                  <Button asChild variant="outline" size="lg">
+                    <a href={`mailto:${settings.email}`}>
+                      <Mail className="mr-2 h-4 w-4" />
+                      {settings.email}
+                    </a>
+                  </Button>
+                  <Button asChild variant="outline" size="lg">
+                    <a href={`tel:${settings.phone.replace(/\s/g, '')}`}>
+                      <Phone className="mr-2 h-4 w-4" />
+                      {settings.phone}
+                    </a>
+                  </Button>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="message">Message *</Label>
-                  <Textarea
-                    id="message"
-                    placeholder="Tell us about your IP needs..."
-                    rows={6}
-                    {...register('message')}
-                    className={errors.message ? 'border-destructive' : ''}
-                  />
-                  {errors.message && (
-                    <p className="text-sm text-destructive">{errors.message.message}</p>
-                  )}
-                </div>
-                <Button
-                  type="submit"
-                  size="lg"
-                  className="bg-accent text-accent-foreground hover:bg-accent/90"
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? (
-                    'Sending...'
-                  ) : (
-                    <>
-                      Send Message
-                      <Send className="ml-2 h-4 w-4" />
-                    </>
-                  )}
-                </Button>
-              </form>
+              </div>
             </div>
 
-            {/* Contact Info */}
-            <div>
-              <h2 className="text-2xl font-bold mb-6">Get in Touch</h2>
-              {isLoading ? (
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Loading contact info...
-                </div>
-              ) : (
-                <div className="space-y-6">
-                  <div className="flex items-start space-x-4">
-                    <div className="h-10 w-10 rounded-lg bg-accent/10 flex items-center justify-center flex-shrink-0">
+            {/* Sidebar */}
+            <div className="space-y-6">
+              <Card className="border-border">
+                <CardContent className="space-y-5 pt-6">
+                  <div className="flex items-start gap-4">
+                    <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-accent/10">
                       <MapPin className="h-5 w-5 text-accent" />
                     </div>
                     <div>
-                      <h3 className="font-semibold mb-1">Address</h3>
-                      <p className="text-muted-foreground text-sm">
-                        {settings?.address?.line || 'Address not available'}<br />
-                        {settings?.address?.city}, {settings?.address?.state}<br />
-                        {settings?.address?.postalCode}
-                      </p>
+                      <h3 className="mb-1 font-semibold">Office</h3>
+                      <address className="text-sm not-italic text-muted-foreground">
+                        {settings.address.line}
+                        <br />
+                        {settings.address.city}, {settings.address.state}{' '}
+                        {settings.address.postalCode}
+                      </address>
                     </div>
                   </div>
-                  <div className="flex items-start space-x-4">
-                    <div className="h-10 w-10 rounded-lg bg-accent/10 flex items-center justify-center flex-shrink-0">
-                      <Phone className="h-5 w-5 text-accent" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold mb-1">Phone</h3>
-                      <a
-                        href={`tel:${settings?.phone || ''}`}
-                        className="text-muted-foreground text-sm hover:text-accent transition-colors"
-                      >
-                        {settings?.phone || 'Phone not available'}
-                      </a>
-                    </div>
-                  </div>
-                  <div className="flex items-start space-x-4">
-                    <div className="h-10 w-10 rounded-lg bg-accent/10 flex items-center justify-center flex-shrink-0">
-                      <Mail className="h-5 w-5 text-accent" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold mb-1">Email</h3>
-                      <a
-                        href={`mailto:${settings?.email || ''}`}
-                        className="text-muted-foreground text-sm hover:text-accent transition-colors"
-                      >
-                        {settings?.email || 'Email not available'}
-                      </a>
-                    </div>
-                  </div>
-                </div>
-              )}
 
-              <div className="mt-8 p-6 bg-muted/50 rounded-lg">
-                <h3 className="font-semibold mb-2">Office Hours</h3>
-                <ul className="text-sm text-muted-foreground space-y-1">
-                  <li>Monday - Friday: 9:00 AM - 6:00 PM</li>
-                  <li>Saturday: 10:00 AM - 2:00 PM</li>
-                  <li>Sunday: Closed</li>
-                </ul>
+                  <div className="flex items-start gap-4">
+                    <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-accent/10">
+                      <Clock className="h-5 w-5 text-accent" />
+                    </div>
+                    <div>
+                      <h3 className="mb-1 font-semibold">Office Hours</h3>
+                      <ul className="space-y-1 text-sm text-muted-foreground">
+                        {officeHours.map((slot) => (
+                          <li key={slot.days}>
+                            <span className="text-foreground/70">{slot.days}:</span> {slot.hours}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <div className="rounded-lg bg-muted/50 p-6">
+                <h3 className="mb-2 font-semibold">Before you write</h3>
+                <p className="text-sm text-muted-foreground">
+                  Telling us the mark, invention or work involved — and what you want to achieve
+                  — lets us give you a useful answer in the first reply rather than the third.
+                </p>
               </div>
             </div>
           </div>

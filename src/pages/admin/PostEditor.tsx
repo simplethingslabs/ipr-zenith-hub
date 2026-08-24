@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Save, Eye, Upload, X, Link, Loader2 } from 'lucide-react';
-import { marked } from 'marked';
+import { renderMarkdown } from '@/lib/markdown';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -247,9 +247,15 @@ export default function PostEditor() {
     }
   }, [formData.title, autoSlug]);
 
+  /*
+   * Uses the same sanitising renderer as the public blog page rather than calling
+   * `marked` directly. Two reasons: the preview then matches exactly what a
+   * reader will see, and an unsanitised preview would execute injected markup
+   * inside an authenticated admin session — the worst place for it to run.
+   */
   const renderedContent = useMemo(() => {
     if (!formData.content) return '';
-    return marked(formData.content);
+    return renderMarkdown(formData.content);
   }, [formData.content]);
 
   const handleChange = (field: keyof PostFormData, value: string) => {

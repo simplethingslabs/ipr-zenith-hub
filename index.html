@@ -1,29 +1,66 @@
 <!doctype html>
-<html lang="en">
+<html lang="en-IN">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>IPR Central - Intellectual Property Consultancy</title>
-    <meta name="description" content="Expert intellectual property consultancy services for trademarks, patents, copyrights, and designs. Protecting your innovations with professional IP solutions." />
-    <meta name="author" content="IPR Central" />
 
-    <meta property="og:title" content="IPR Central - Intellectual Property Consultancy" />
-    <meta property="og:description" content="Expert intellectual property consultancy services for trademarks, patents, copyrights, and designs." />
+    <!--
+      These are the DEFAULT head tags. Per-route titles, descriptions, canonical
+      URLs and JSON-LD are written at runtime by <Seo> (src/components/Seo.tsx).
+      Link-preview scrapers that do not run JavaScript only ever see what is here,
+      so these values must stand on their own.
+    -->
+    <title>IPR Central — Intellectual Property Consultancy</title>
+    <meta
+      name="description"
+      content="Expert intellectual property consultancy for trademarks, patents, copyrights and designs. Transparent fees, clear advice, and end-to-end filing and enforcement support."
+    />
+    <meta name="author" content="IPR Central" />
+    <meta name="theme-color" content="#0b1220" />
+
+    <!-- TODO(owner): point og:url and og:image at the real domain once it is live. -->
+    <meta property="og:site_name" content="IPR Central" />
+    <meta property="og:title" content="IPR Central — Intellectual Property Consultancy" />
+    <meta
+      property="og:description"
+      content="Expert intellectual property consultancy for trademarks, patents, copyrights and designs."
+    />
     <meta property="og:type" content="website" />
-    <meta property="og:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+    <meta property="og:locale" content="en_IN" />
 
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:site" content="@IPRCentral" />
-    <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+    <meta name="twitter:title" content="IPR Central — Intellectual Property Consultancy" />
+    <meta
+      name="twitter:description"
+      content="Expert intellectual property consultancy for trademarks, patents, copyrights and designs."
+    />
 
-    <!-- Google Fonts: Playfair Display + Inter -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+
+    <!--
+      Google Fonts. `display=swap` means text paints in the fallback face
+      immediately rather than blocking on the webfont, and the preconnects save a
+      round-trip on the font request.
+    -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap"
+      rel="stylesheet"
+    />
   </head>
 
   <body>
     <div id="root"></div>
+    <noscript>
+      <div style="font-family: system-ui, sans-serif; padding: 2rem; max-width: 40rem">
+        <h1>IPR Central</h1>
+        <p>
+          This site needs JavaScript to display. To reach us directly, email
+          <a href="mailto:sahil09pr@gmail.com">sahil09pr@gmail.com</a>.
+        </p>
+      </div>
+    </noscript>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

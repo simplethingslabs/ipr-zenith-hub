@@ -18,6 +18,12 @@ const getAuthHeader = (): Record<string, string> => {
   return {};
 };
 
+/** Shape of the error body returned by the API's validation middleware. */
+interface ApiErrorBody {
+  message?: string;
+  errors?: Array<{ field: string; message: string }>;
+}
+
 // Base fetch wrapper with error handling
 async function request<T>(
   path: string,
@@ -33,16 +39,22 @@ async function request<T>(
   });
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ message: 'Request failed' }));
+    const error: ApiErrorBody = await response
+      .json()
+      .catch(() => ({ message: 'Request failed' }));
 
-    // Check for validation errors and format them
+    // Surface field-level validation failures rather than a bare status code.
     if (error.errors && Array.isArray(error.errors)) {
-      const questions = error.errors.map((e: any) => `${e.field}: ${e.message}`).join(', ');
-      throw new Error(`Validation error: ${questions}`);
+      const details = error.errors.map((e) => `${e.field}: ${e.message}`).join(', ');
+      throw new Error(`Validation error: ${details}`);
     }
 
     throw new Error(error.message || `HTTP ${response.status}`);
   }
+
+  // 204 No Content has an empty body, so json() would throw. The delete
+  // endpoints return 204, and their declared return type is void.
+  if (response.status === 204) return undefined as T;
 
   return response.json();
 }

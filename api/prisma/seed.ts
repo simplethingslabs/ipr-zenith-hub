@@ -3,20 +3,46 @@ import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
+/**
+ * Admin credentials come from the environment, never from source.
+ *
+ * A previous version of this file hard-coded a real admin email and plaintext
+ * password. Anyone with repository access — and anyone who ever forked or cloned
+ * it — had the credentials, and they remain in git history, so that password must
+ * be treated as compromised and rotated rather than reused here.
+ */
+function requireEnv(name: string): string {
+  const value = process.env[name];
+  if (!value) {
+    throw new Error(
+      `Missing required environment variable ${name}. ` +
+        `Set it in api/.env (which is gitignored) before running the seed.`,
+    );
+  }
+  return value;
+}
+
 async function main() {
   console.log('🌱 Seeding database...');
 
-  // Create admin user
-  const hashedPassword = await bcrypt.hash('M07Choudhary', 12);
+  const adminEmail = requireEnv('SEED_ADMIN_EMAIL');
+  const adminPassword = requireEnv('SEED_ADMIN_PASSWORD');
+  const adminName = process.env.SEED_ADMIN_NAME || 'Administrator';
+
+  if (adminPassword.length < 12) {
+    throw new Error('SEED_ADMIN_PASSWORD must be at least 12 characters.');
+  }
+
+  const hashedPassword = await bcrypt.hash(adminPassword, 12);
   const admin = await prisma.user.upsert({
-    where: { email: 'sahil09pr@gmail.com' },
+    where: { email: adminEmail },
     update: {
-      password: hashedPassword, // Ensure password is updated if user exists
+      password: hashedPassword, // Re-seeding rotates the password.
     },
     create: {
-      email: 'sahil09pr@gmail.com',
+      email: adminEmail,
       password: hashedPassword,
-      name: 'Sahil Choudhary',
+      name: adminName,
       role: 'admin',
     },
   });
