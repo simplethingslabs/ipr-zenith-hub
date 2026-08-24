@@ -48,10 +48,10 @@ export const site: Settings = {
   phone: '+91 95182 97826',
   whatsapp: `+${WHATSAPP_NUMBER}`,
   address: {
-    line: '123 Legal Tower, Connaught Place', // PLACEHOLDER
-    city: 'New Delhi', // PLACEHOLDER
-    state: 'Delhi', // PLACEHOLDER
-    postalCode: '110001', // PLACEHOLDER
+    line: 'Chamber No. 44, Bar Association Court Complex, Bahadurgarh, Jhajjar',
+    city: 'Bahadurgarh',
+    state: 'Haryana',
+    postalCode: '124507',
   },
   socialLinks: {
     linkedin: 'https://linkedin.com/company/iprcentral', // PLACEHOLDER
