@@ -5,10 +5,6 @@
  * to change the site. If the admin API/database is running, values here are used
  * for the instant first paint and then transparently refreshed from the API.
  *
- * ─────────────────────────────────────────────────────────────────────────────
- * TODO(owner): every value marked PLACEHOLDER below is carried over from the
- * original database seed and is NOT real. Replace before going live.
- * ─────────────────────────────────────────────────────────────────────────────
  */
 
 import type { Settings } from '@/types';
