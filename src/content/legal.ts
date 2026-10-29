@@ -107,8 +107,8 @@ export const termsSections: LegalSection[] = [
   {
     heading: 'Fee information',
     paragraphs: [
-      'The fees published on this site are indicative professional fees, stated exclusive of applicable taxes, and exclusive of government and statutory filing fees unless a line item says otherwise.',
-      'Indicative fees are not a quotation and are not binding. Where an item is shown as a range, the final amount depends on scope. We confirm a fixed quote in writing before any work begins.',
+      'Fees are quoted on request, for example through the WhatsApp links on our Fees page. Quoted professional fees are stated exclusive of applicable taxes, and exclusive of government and statutory filing fees unless we say otherwise.',
+      'Any figure discussed in an initial enquiry is indicative and not binding. The final amount depends on scope, and we confirm a quote in writing before any work begins.',
     ],
   },
   {

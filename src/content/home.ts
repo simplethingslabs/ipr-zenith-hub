@@ -9,7 +9,7 @@ export const hero = {
   subhead:
     'End-to-end intellectual property support for founders, creators and established ' +
     'businesses. Trademarks, patents, copyrights and designs — filed, defended and ' +
-    'maintained, with fees published up front.',
+    'maintained, with a clear quote before any work begins.',
 };
 
 export interface ValueProp {
@@ -39,8 +39,8 @@ export const valueProps: ValueProp[] = [
   },
   {
     icon: Award,
-    title: 'Transparent Pricing',
+    title: 'Clear Quotes',
     description:
-      "Clear, upfront fees with no hidden costs. Know exactly what you're paying for.",
+      "Tell us what you need and get a clear fee quote before any work begins. No surprises.",
   },
 ];

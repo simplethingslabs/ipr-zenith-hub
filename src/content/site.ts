@@ -43,7 +43,7 @@ export const site: Settings = {
     'IPR Central is an intellectual property consultancy specialising in trademark ' +
     'registration, patent prosecution, copyright protection and IP enforcement. We work ' +
     'with founders, creators and established businesses to turn ideas into protected, ' +
-    'enforceable assets — with clear advice and transparent pricing.',
+    'enforceable assets — with clear advice and clear quotes.',
   email: 'sahil09pr@gmail.com',
   phone: '+91 95182 97826',
   whatsapp: `+${WHATSAPP_NUMBER}`,
@@ -69,4 +69,4 @@ export const officeHours = [
 /** Default meta description used when a page does not supply its own. */
 export const defaultDescription =
   'Expert intellectual property consultancy for trademarks, patents, copyrights and ' +
-  'designs. Transparent fees, clear advice, and end-to-end filing and enforcement support.';
+  'designs. Clear quotes, clear advice, and end-to-end filing and enforcement support.';
