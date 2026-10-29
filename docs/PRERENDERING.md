@@ -36,7 +36,7 @@ JavaScript. It is not invisible to two other kinds of visitor:
 
 ### 1a. Link-preview scrapers (the immediate, visible problem)
 
-When someone pastes `https://iprcentral.in/blog/understanding-trademark-registration-india`
+When someone pastes `https://iprcentral.com/blog/understanding-trademark-registration-india`
 into WhatsApp, Slack, iMessage, LinkedIn or X, that platform's server fetches the
 URL **without executing JavaScript** and reads whatever is in the raw HTML
 response. Today that is always:

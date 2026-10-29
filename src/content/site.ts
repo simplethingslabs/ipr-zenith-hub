@@ -14,7 +14,7 @@
 import type { Settings } from '@/types';
 
 /** Canonical production origin, used for canonical URLs, sitemap and OG tags. */
-export const SITE_URL = 'https://iprcentral.in'; // PLACEHOLDER — set to your real domain
+export const SITE_URL = 'https://iprcentral.com';
 
 /**
  * WhatsApp number in international format, digits only, no `+` or spaces.
@@ -54,8 +54,8 @@ export const site: Settings = {
     postalCode: '124507',
   },
   socialLinks: {
-    linkedin: 'https://linkedin.com/company/iprcentral', // PLACEHOLDER
-    twitter: 'https://twitter.com/iprcentral', // PLACEHOLDER
+    linkedin: 'https://www.linkedin.com/in/sahil-lohchab-98b0b749/',
+    twitter: 'https://x.com/slrsahil?s=11',
   },
 };
 
