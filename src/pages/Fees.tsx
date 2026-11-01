@@ -41,6 +41,11 @@ export default function Fees() {
       {/* Fee tables */}
       <section className="py-16 md:py-24">
         <Container>
+          <p className="mb-8 rounded-lg border border-accent/30 bg-accent/10 p-4 text-base font-medium">
+            Professional trademark filing fees start at ₹1,599, excluding government fees and
+            other statutory charges.
+          </p>
+
           {/*
             Tabs are used purely as a segmented control here — both audiences come
             from the same in-memory list, so there is no per-tab fetch and no
