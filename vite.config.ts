@@ -7,7 +7,24 @@ import PuppeteerRenderer from "@prerenderer/renderer-puppeteer";
 import { allRoutes } from "./scripts/routes";
 
 // https://vitejs.dev/config/
-export default defineConfig(({ mode }) => ({
+/*
+ * Vercel's build image lacks the shared libraries (libnspr4 etc.) that the
+ * Chromium downloaded by puppeteer needs, so the prerender step fails there with
+ * "error while loading shared libraries". `@sparticuz/chromium` ships a Chromium
+ * build bundled with those libraries; it is used only on Vercel. Everywhere else
+ * puppeteer's own Chromium is used, unchanged.
+ */
+async function vercelChromiumLaunchOptions() {
+  if (!process.env.VERCEL) return undefined;
+  const { default: chromium } = await import("@sparticuz/chromium");
+  return {
+    executablePath: await chromium.executablePath(),
+    args: chromium.args,
+    headless: "shell" as const,
+  };
+}
+
+export default defineConfig(async ({ mode }) => ({
   server: {
     host: "::",
     port: 8080,
@@ -76,6 +93,7 @@ export default defineConfig(({ mode }) => ({
            */
           renderAfterElementExists: "footer",
           headless: true,
+          ...(mode === "production" && { launchOptions: await vercelChromiumLaunchOptions() }),
           // Unbounded concurrency (the library default) opens one Chromium tab
           // per route simultaneously, which proved unstable — intermittent
           // "Target.closeTarget" protocol errors under all 12 routes at once.
