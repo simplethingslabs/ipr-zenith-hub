@@ -52,7 +52,7 @@ Admin panel (requires API + database)  🔒
 | Hero | Authored headline and subhead from `content/home.ts`, gold-on-navy gradient with blurred accent orbs |
 | Primary CTA | "Request a Consultation" → WhatsApp, prefilled *"…request a consultation about protecting my IP"* |
 | Secondary CTA | "View Our Fees" → `/fees` |
-| Value propositions | Four cards — Comprehensive Protection, Expert Guidance, Strategic Enforcement, Transparent Pricing |
+| Value propositions | Four cards — Comprehensive Protection, Expert Guidance, Strategic Enforcement, Clear Quotes |
 | Latest Insights | Three newest published posts, each with category pill, formatted date (`en-IN`), title and excerpt. Section is **omitted entirely** when there are no posts. |
 | Closing CTA | WhatsApp + link to all contact options |
 | Structured data | `schema.org/LegalService` — name, description, address, telephone, email, `areaServed`, `knowsAbout`, `sameAs` |

@@ -42,7 +42,7 @@ export default function Home() {
                 Request a Consultation
               </WhatsAppCta>
               <Button asChild size="lg" variant="outline" className="border-primary-foreground/50 bg-transparent text-primary-foreground hover:bg-primary-foreground hover:text-primary">
-                <Link to="/fees">View Our Fees</Link>
+                <Link to="/fees">Ask About Fees</Link>
               </Button>
             </div>
           </div>

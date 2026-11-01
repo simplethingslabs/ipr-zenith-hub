@@ -5,16 +5,12 @@
  * to change the site. If the admin API/database is running, values here are used
  * for the instant first paint and then transparently refreshed from the API.
  *
- * ─────────────────────────────────────────────────────────────────────────────
- * TODO(owner): every value marked PLACEHOLDER below is carried over from the
- * original database seed and is NOT real. Replace before going live.
- * ─────────────────────────────────────────────────────────────────────────────
  */
 
 import type { Settings } from '@/types';
 
 /** Canonical production origin, used for canonical URLs, sitemap and OG tags. */
-export const SITE_URL = 'https://iprcentral.in'; // PLACEHOLDER — set to your real domain
+export const SITE_URL = 'https://iprcentral.com';
 
 /**
  * WhatsApp number in international format, digits only, no `+` or spaces.
@@ -43,7 +39,7 @@ export const site: Settings = {
     'IPR Central is an intellectual property consultancy specialising in trademark ' +
     'registration, patent prosecution, copyright protection and IP enforcement. We work ' +
     'with founders, creators and established businesses to turn ideas into protected, ' +
-    'enforceable assets — with clear advice and transparent pricing.',
+    'enforceable assets — with clear advice and clear quotes.',
   email: 'sahil09pr@gmail.com',
   phone: '+91 95182 97826',
   whatsapp: `+${WHATSAPP_NUMBER}`,
@@ -54,8 +50,8 @@ export const site: Settings = {
     postalCode: '124507',
   },
   socialLinks: {
-    linkedin: 'https://linkedin.com/company/iprcentral', // PLACEHOLDER
-    twitter: 'https://twitter.com/iprcentral', // PLACEHOLDER
+    linkedin: 'https://www.linkedin.com/in/sahil-lohchab-98b0b749/',
+    twitter: 'https://x.com/slrsahil?s=11',
   },
 };
 
@@ -69,4 +65,4 @@ export const officeHours = [
 /** Default meta description used when a page does not supply its own. */
 export const defaultDescription =
   'Expert intellectual property consultancy for trademarks, patents, copyrights and ' +
-  'designs. Transparent fees, clear advice, and end-to-end filing and enforcement support.';
+  'designs. Clear quotes, clear advice, and end-to-end filing and enforcement support.';

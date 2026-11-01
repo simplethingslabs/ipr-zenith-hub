@@ -8,19 +8,8 @@ import { Seo } from '@/components/Seo';
 import { WhatsAppCta } from '@/components/WhatsAppCta';
 import { useFees, groupFeesByCategory } from '@/lib/content';
 import { feeNotes } from '@/content/fees';
+import { whatsappUrl } from '@/content/site';
 import type { Audience } from '@/types';
-
-const inr = new Intl.NumberFormat('en-IN', {
-  style: 'currency',
-  currency: 'INR',
-  minimumFractionDigits: 0,
-  maximumFractionDigits: 0,
-});
-
-function formatPrice(min: number, max?: number): string {
-  if (max && max !== min) return `${inr.format(min)} – ${inr.format(max)}`;
-  return inr.format(min);
-}
 
 export default function Fees() {
   const [audience, setAudience] = useState<Audience>('Individuals');
@@ -32,7 +21,7 @@ export default function Fees() {
       <Seo
         path="/fees"
         title="Fees"
-        description="Transparent professional fees for trademark, patent, copyright and design work. Fixed prices where we can, quoted ranges where scope varies — no hidden costs."
+        description="Professional fees for trademark, patent, copyright and design work. Contact us on WhatsApp for a clear quote before any work begins."
       />
 
       {/* Hero */}
@@ -41,9 +30,9 @@ export default function Fees() {
           <div className="max-w-3xl">
             <h1 className="mb-6 text-4xl font-bold md:text-5xl">Our Fees</h1>
             <p className="text-lg text-muted-foreground">
-              Transparent, competitive pricing for all our IP services. Fixed prices where the
-              work is predictable, quoted ranges where it genuinely depends on scope — and a
-              firm quote before anything starts.
+              Every matter is different, so we quote each one individually. Message us on
+              WhatsApp with the details and we'll come back with the consultation fees for
+              your service.
             </p>
           </div>
         </Container>
@@ -85,14 +74,18 @@ export default function Fees() {
                     {section.items.map((fee) => (
                       <Card key={fee.id} className="flex flex-col border-border">
                         <CardContent className="flex flex-1 flex-col pt-6">
-                          <div className="mb-2 flex items-start justify-between gap-2">
-                            <h3 className="text-lg font-semibold">{fee.name}</h3>
-                            <span className="flex-shrink-0 rounded-full bg-muted px-2 py-1 text-xs text-muted-foreground">
-                              {fee.type === 'fixed' ? 'Fixed' : 'From'}
-                            </span>
-                          </div>
-                          <p className="mb-2 text-2xl font-bold text-accent">
-                            {formatPrice(fee.priceMin, fee.priceMax)}
+                          <h3 className="mb-2 text-lg font-semibold">{fee.name}</h3>
+                          <p className="mb-2 text-lg font-bold text-accent">
+                            <a
+                              href={whatsappUrl(
+                                `Hello IPR Central, I'd like to know the consultation fees for ${fee.name} (${fee.audience.toLowerCase()}).`,
+                              )}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="underline-offset-4 hover:underline"
+                            >
+                              Contact for Consultation Fees
+                            </a>
                           </p>
                           {fee.notes && (
                             <p className="text-sm text-muted-foreground">{fee.notes}</p>
@@ -127,7 +120,7 @@ export default function Fees() {
             <h2 className="mb-4 text-3xl font-bold">Need a Custom Quote?</h2>
             <p className="mb-8 text-primary-foreground/80">
               For portfolios, multi-jurisdiction filings or high-volume work, send us the
-              details and we'll come back with a fixed quote.
+              details and we'll come back with a quote.
             </p>
             <WhatsAppCta
               size="lg"

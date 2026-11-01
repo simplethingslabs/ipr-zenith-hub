@@ -1,12 +1,13 @@
 /**
- * Fee schedule rendered on /fees.
+ * Service list rendered on /fees.
  *
  * Prices are professional fees in INR. `priceMax` is only set for `variable`
  * items, where the final quote depends on scope. Government/statutory fees are
  * called out per item in `notes` rather than assumed.
  *
- * TODO(owner): these figures came from the original database seed. Confirm every
- * amount against your current rate card before launch.
+ * The public /fees page no longer displays these amounts: each service links to
+ * WhatsApp ("Contact for Consultation Fees"). The figures are retained as internal
+ * reference data and are not rendered.
  */
 
 import type { FeeItem } from '@/types';
@@ -196,8 +197,7 @@ export const fees: FeeItem[] = [
 
 /** Caveats rendered under the fee tables. */
 export const feeNotes = [
-  'All amounts are professional fees in Indian Rupees and exclusive of applicable GST.',
-  'Government and statutory filing fees are billed separately at actuals unless a line item says otherwise.',
-  'Variable pricing is confirmed as a fixed quote before any work begins.',
+  'Fees are confirmed on request via WhatsApp before any work begins.',
+  'Government and statutory filing fees are billed separately at actuals unless confirmed otherwise.',
   'Custom quotes are available for portfolios, multi-jurisdiction filings and high-volume work.',
 ];

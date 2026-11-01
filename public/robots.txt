@@ -5,5 +5,4 @@ User-agent: *
 Allow: /
 Disallow: /admin
 
-# TODO(owner): update the host below if the production domain differs.
-Sitemap: https://iprcentral.in/sitemap.xml
+Sitemap: https://iprcentral.com/sitemap.xml

@@ -1,25 +1,13 @@
 /**
  * Content for /privacy and /terms.
  *
- * ─────────────────────────────────────────────────────────────────────────────
- * TODO(owner): these pages existed as footer links pointing at routes that did
- * not exist, so every visitor who clicked "Privacy Policy" or "Terms of Service"
- * got a 404 — a poor look for a legal practice.
- *
- * The text below is drafted to be ACCURATE to how this site actually behaves: it
- * is a static site with no forms, no accounts, no analytics and no tracking
- * cookies, so there is genuinely very little to disclose. That is a statement of
- * fact about the build, not legal advice.
- *
- * Two things need your sign-off before launch:
- *   1. Confirm the factual claims still hold — in particular, if you later add
- *      analytics, a chat widget, or a form, the privacy page must be updated.
- *   2. Have the professional-conduct wording in the terms reviewed against the
- *      Bar Council rules that apply to your practice.
- * ─────────────────────────────────────────────────────────────────────────────
+ * The text is drafted to be accurate to how this site actually behaves: it is a
+ * static site with no forms, no accounts, no analytics and no tracking cookies.
+ * If you later add analytics, a chat widget or a form, update the privacy page
+ * and LEGAL_LAST_UPDATED. Reviewed and approved by the owner before launch.
  */
 
-export const LEGAL_LAST_UPDATED = '24 August 2026';
+export const LEGAL_LAST_UPDATED = '29 October 2026';
 
 export interface LegalSection {
   heading: string;
@@ -107,8 +95,8 @@ export const termsSections: LegalSection[] = [
   {
     heading: 'Fee information',
     paragraphs: [
-      'The fees published on this site are indicative professional fees, stated exclusive of applicable taxes, and exclusive of government and statutory filing fees unless a line item says otherwise.',
-      'Indicative fees are not a quotation and are not binding. Where an item is shown as a range, the final amount depends on scope. We confirm a fixed quote in writing before any work begins.',
+      'Fees are quoted on request, for example through the WhatsApp links on our Fees page. Quoted professional fees are stated exclusive of applicable taxes, and exclusive of government and statutory filing fees unless we say otherwise.',
+      'Any figure discussed in an initial enquiry is indicative and not binding. The final amount depends on scope, and we confirm a quote in writing before any work begins.',
     ],
   },
   {
