@@ -40,7 +40,7 @@ export const site: Settings = {
     'registration, patent prosecution, copyright protection and IP enforcement. We work ' +
     'with founders, creators and established businesses to turn ideas into protected, ' +
     'enforceable assets — with clear advice and clear quotes.',
-  email: 'sahil09pr@gmail.com',
+  email: 'lohchab.advocate@gmail.com',
   phone: '+91 95182 97826',
   whatsapp: `+${WHATSAPP_NUMBER}`,
   address: {
