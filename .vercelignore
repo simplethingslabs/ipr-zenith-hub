@@ -1,0 +1,4 @@
+# The Express admin API in api/ is not part of the static site. Without this,
+# Vercel treats every file in it as a serverless function and the Hobby plan
+# rejects the deployment (limit: 12).
+api/
